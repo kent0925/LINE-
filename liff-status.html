@@ -1,0 +1,22 @@
+// /liff-status.html 核心 JS 片段
+// ... LIFF 初始化 (liff.init) ...
+
+function fetchStatus(user_id) {
+    // 呼叫後端查詢 API
+    fetch('http://your-server.com/api/check_status', { /* ... */ })
+        .then(response => response.json())
+        .then(data => {
+            // 顯示 data.registrations 內容，並提供取消按鈕
+        });
+}
+
+function confirmCancel(user_id) {
+    if (confirm("確定要取消目前所有有效的報名嗎？")) {
+        fetch('http://your-server.com/cancel', {
+            method: 'POST',
+            body: JSON.stringify({ line_user_id: user_id }),
+            // ... headers
+        })
+        .then(/* ... 顯示取消成功訊息並關閉 LIFF ... */)
+    }
+}
