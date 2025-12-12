@@ -1,7 +1,7 @@
 // =======================================================
 // 1. 設定變數 (請替換 LIFF ID 和 GAS URL)
 // =======================================================
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzqW4Ru1mpRyUEaLioTmXMojq2QSw1x5hIelktSv40RvT-4Vm5GpkvoCyQIpQUcvUY/exec'; // *** 請替換成您部署的 GAS 網址 ***
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQc60R4UO9-hFDnfv2m4BUUlAmQtY1MNdqwIL_Sd4laH_JT3hGPHJ2KHC_mb1hBo0y/exec'; // *** 請替換成您部署的 GAS 網址 ***
 const LIFF_ID = '2008678090-b1Up4o0J'; // *** 請替換成您的 LIFF ID ***
 
 let userId = '未取得 LIFF ID'; // 用於儲存 LIFF 使用者 ID，報名時傳送
