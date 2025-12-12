@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // *** 請替換成您部署的 GAS 網址 ***
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzqW4Ru1mpRyUEaLioTmXMojq2QSw1x5hIelktSv40RvT-4Vm5GpkvoCyQIpQUcvUY/exec'; // *** 請替換成您部署的 GAS 網址 ***
 let userId = '未取得 LIFF ID'; // 用於儲存 LIFF 使用者 ID
 
 // DOM 元素
