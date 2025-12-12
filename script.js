@@ -1,7 +1,7 @@
 // =======================================================
 // 1. 設定變數 (請替換 LIFF ID 和 GAS URL)
 // =======================================================
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQc60R4UO9-hFDnfv2m4BUUlAmQtY1MNdqwIL_Sd4laH_JT3hGPHJ2KHC_mb1hBo0y/exec'; // *** 請替換成您部署的 GAS 網址 ***
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQc60R4UO9-hFDnfv2m4BUUlAmQtY1MNDqwIL_Sd4laH_JT3hGPHJ2KHC_mb1hBo0y/exec'; // *** 請替換成您部署的 GAS 網址 ***
 const LIFF_ID = '2008678090-b1Up4o0J'; // *** 請替換成您的 LIFF ID ***
 
 let userId = '未取得 LIFF ID'; // 用於儲存 LIFF 使用者 ID，報名時傳送
@@ -46,14 +46,21 @@ async function loadEventData() {
 
         // 填充欄位 (假設 GAS 返回的 Key 為 EventSubject, EventTime, EventLocation)
         eventSubjectInput.value = data.EventSubject || 'N/A';
-        eventTimeInput.value = data.EventTime || 'N/A';
+        // 注意：eventTime 的值必須是 YYYY-MM-DDTHH:MM 格式才能正確顯示在 datetime-local
+        let timeValue = data.EventTime;
+        // 如果 GAS 返回的是 'YYYY/MM/DD HH:MM' 格式，這裡需要轉換成 'YYYY-MM-DDTHH:MM' 
+        if (timeValue && timeValue.includes('/') && timeValue.includes(' ')) {
+            timeValue = timeValue.replace(/\//g, '-').replace(' ', 'T');
+        }
+        eventTimeInput.value = timeValue || 'N/A';
+        
         eventLocationInput.value = data.EventLocation || 'N/A';
         
         statusMessage.textContent = '活動資訊已載入。';
 
     } catch (error) {
         console.error('載入活動資料失敗:', error);
-        statusMessage.textContent = '💥 無法連接到活動設定服務。';
+        statusMessage.textContent = '💥 無法連接到活動設定服務 (GAS)。';
     }
 }
 
@@ -75,7 +82,6 @@ async function initializeLiff() {
             const profile = await liff.getProfile();
             userId = profile.userId;
             
-            // 修正點：前端顯示 LINE 名稱，讓使用者易於辨識
             const userNameDisplay = profile.displayName; 
             userNameInput.value = userNameDisplay;
 
@@ -149,7 +155,8 @@ async function sendDataToGas(action) {
     const formData = collectFormData(action);
 
     try {
-        const response = await fetch(GAS_WEB_APP_URL, {
+        // 1. POST 請求發送 (no-cors 模式)
+        await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors', 
             headers: {
@@ -158,8 +165,8 @@ async function sendDataToGas(action) {
             body: new URLSearchParams(formData).toString() 
         });
 
-        // 由於 no-cors 模式，我們發送一個成功的 GET 請求來檢查 GAS 的實際回應
-        // (注意：這是一個進階的 workaround，用於繞過 no-cors 限制)
+        // 2. GET 狀態檢查請求 (讀取 JSON)
+        // 這是繞過 no-cors 限制，檢查 GAS 實際處理結果的關鍵
         const checkResponse = await fetch(`${GAS_WEB_APP_URL}?action=checkStatus&userId=${userId}`);
         const result = await checkResponse.json(); 
 
@@ -196,7 +203,7 @@ async function sendDataToGas(action) {
 }
 
 /**
- * 處理按鈕狀態的簡易切換 (這裡簡化，直接假設初次進入為未報名狀態)
+ * 處理按鈕狀態的簡易切換
  */
 function checkRegistrationStatus(currentUserId) {
     // 預設顯示 '確認報名'
@@ -208,12 +215,13 @@ function checkRegistrationStatus(currentUserId) {
 }
 
 /**
- * 處理「顯示地圖」按鈕點擊事件 (修正 URL 編碼錯誤)
+ * 處理「顯示地圖」按鈕點擊事件 (已修正 URL 編碼錯誤)
  */
 function handleShowMap() {
     const locationName = eventLocationInput.value;
-    // 修正的地圖 URL 結構
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName)}`;
+    
+    // ✅ 修正：使用正確的 Google 地圖搜尋 URL 結構
+    const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(locationName)}`;
 
     if (liff.isInClient()) {
         liff.openWindow({
