@@ -7,10 +7,6 @@ const LIFF_ID = '2008678090-b1Up4o0J'; // *** 請替換成您的 LIFF ID ***
 let userId = '未取得 LIFF ID'; // 用於儲存 LIFF 使用者 ID，報名時傳送
 
 // DOM 元素
-const eventSubjectInput = document.getElementById('eventSubject');
-const eventTimeInput = document.getElementById('eventTime');
-const eventLocationInput = document.getElementById('eventLocation');
-
 const userNameInput = document.getElementById('userName');
 const attendeesCountSelect = document.getElementById('attendeesCount');
 const guestSection = document.getElementById('guestSection');
@@ -20,7 +16,6 @@ const submitBtn = document.getElementById('submitBtn');
 const modifyBtn = document.getElementById('modifyBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const statusMessage = document.getElementById('statusMessage');
-const showMapBtn = document.getElementById('showMapBtn');
 
 // =======================================================
 // 2. 核心函式：活動資料載入 (從 GAS 讀取)
