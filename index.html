@@ -391,17 +391,18 @@
         }
     }
 
-    // 輔助函式：格式化時間 (保持不變)
-    function formatTime(timeString) {
-         let displayTime = timeString || "";
-         if (displayTime && !isNaN(new Date(timeString))) {  
-             displayTime = new Date(timeString).toLocaleString('zh-TW', {
-                 year: 'numeric', month: '2-digit', day: '2-digit',  
-                 hour: '2-digit', minute: '2-digit', hour12: false
-             });
-         }
-         return displayTime;
-    }
+// 輔助函式：格式化時間 (修正 ReferenceError 錯誤)
+function formatTime(timeString) {
+     let displayTime = timeString || "";
+     // 修正：將錯誤的 displayString 替換為 timeString
+     if (displayTime && !isNaN(new Date(timeString))) {  
+         displayTime = new Date(timeString).toLocaleString('zh-TW', {
+             year: 'numeric', month: '2-digit', day: '2-digit',  
+             hour: '2-digit', minute: '2-digit', hour12: false
+         });
+     }
+     return displayTime;
+}
 
     // 顯示按鈕邏輯 (保持不變)
     function showButtons(mode) {
