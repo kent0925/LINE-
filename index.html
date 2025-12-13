@@ -16,7 +16,7 @@
             --success-color: #4caf50; 
             --warning-color: #ff9800; 
             --danger-color: #e53935; 
-            --stat-color: #00897b; /* 統計區塊強調色 */
+            --stat-color: #00897b; 
         }
 
         body { 
@@ -51,9 +51,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
-        /* 統計區塊樣式 */
         .statistics-box {
-            background-color: #e0f2f1; /* 淺綠色背景 */
+            background-color: #e0f2f1; 
             border: 1px solid var(--stat-color);
             padding: 15px;
             border-radius: 8px;
@@ -77,11 +76,9 @@
             font-size: 0.95em;
             line-height: 1.6;
             color: #444;
-            white-space: pre-wrap; /* 保持換行格式 */
+            white-space: pre-wrap; 
         }
         
-        /* [其餘樣式保持不變...] */
-
         label { 
             display: block; 
             margin-top: 15px; 
@@ -107,6 +104,46 @@
             color: var(--primary-color) !important; 
             text-decoration: none;
             font-weight: bold;
+        }
+
+        .btn-group { 
+            margin-top: 30px; 
+            display: flex; 
+            gap: 15px; 
+        }
+        button { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            color: white; 
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        
+        #signupBtn { 
+            background-color: var(--success-color); 
+        } 
+        #updateBtn { 
+            background-color: var(--warning-color); 
+        } 
+        #cancelBtn { 
+            background-color: var(--danger-color); 
+        } 
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        button:disabled { 
+            background-color: #b0bec5; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
         }
     </style>
     </head>
@@ -139,6 +176,7 @@
         <h4>已報名者名單 (LINE 暱稱)：</h4>
         <div id="nameList">載入中...</div>
     </div>
+
     <form id="mainForm" class="hidden">
         <input type="hidden" id="lineUserId">
         <input type="hidden" id="eventID"> 
@@ -169,15 +207,15 @@
     // =========================================
 
     let ALL_EVENTS = []; 
-    let USER_SIGNUP_DATA = null; 
-    let ALL_EVENT_STATS = null; // 【新增】儲存所有活動的統計數據
+    // 【核心變更】USER_SIGNUP_DATA 現在是一個 Map：{ EventID: { count: N, guests: "...", status: "..." } }
+    let USER_SIGNUP_DATA = {}; 
+    let ALL_EVENT_STATS = null; 
 
     window.onload = async function() {
         await initLIFF();
     };
 
     async function initLIFF() {
-        // [ initLIFF 保持不變 ]
         try {
             await liff.init({ liffId: LIFF_ID });
             if (liff.isLoggedIn()) {
@@ -198,7 +236,6 @@
         }
     }
 
-    // 整合讀取：抓活動清單 + 檢查此人是否報名過
     async function fetchData(userId) { 
         try {
             const loadingDiv = document.getElementById('loading');
@@ -215,10 +252,15 @@
                  return;
             }
 
-            // 儲存全域變數
             ALL_EVENTS = data.eventList || [];
-            USER_SIGNUP_DATA = data.userData;
-            ALL_EVENT_STATS = data.eventStats; // 【新增】儲存統計數據
+            ALL_EVENT_STATS = data.eventStats; 
+            
+            // 【核心變更】接收到的 userData 現在是一個物件，鍵是 EventID
+            if (data.userData && typeof data.userData === 'object') {
+                USER_SIGNUP_DATA = data.userData;
+            } else {
+                USER_SIGNUP_DATA = {};
+            }
 
             if (ALL_EVENTS.length === 0) {
                  document.getElementById('event-selection-area').innerHTML = '<div style="color:red; font-weight:bold;">目前沒有開放報名的活動！</div>';
@@ -228,19 +270,13 @@
             // 填充活動下拉式選單
             populateEventSelect(ALL_EVENTS);
 
-            // 判斷選取哪個活動
-            let selectedEventId = '';
-            if (USER_SIGNUP_DATA && USER_SIGNUP_DATA.eventId) {
-                selectedEventId = USER_SIGNUP_DATA.eventId;
-            } else if (ALL_EVENTS.length > 0) {
-                 selectedEventId = ALL_EVENTS[0].EventID;
-            }
+            // 判斷選取哪個活動 (預設選取第一個)
+            let selectedEventId = ALL_EVENTS.length > 0 ? ALL_EVENTS[0].EventID : '';
 
             if (selectedEventId) {
                 document.getElementById('event-select').value = selectedEventId;
             }
             
-            // 載入資料後，觸發一次選擇事件
             handleEventSelection(); 
 
         } catch (err) {
@@ -249,57 +285,61 @@
         }
     }
 
-    // 填充下拉式選單 (保持不變)
+    // 填充下拉式選單 (需根據新的 USER_SIGNUP_DATA 結構調整標記邏輯)
     function populateEventSelect(events) {
         const select = document.getElementById('event-select');
-        let optionsHtml = select.innerHTML;
-
+        select.innerHTML = '<option value="" disabled selected>-- 請選擇一個活動 --</option>'; // 清除舊選項
+        
         events.forEach(event => {
             let optionText = `${event.Title} (${formatTime(event.Time)})`; 
-            if (USER_SIGNUP_DATA && USER_SIGNUP_DATA.eventId === event.EventID) {
+            
+            // 檢查使用者是否已報名此活動 (狀態為 SIGNUP 或 UPDATE)
+            const userStatus = USER_SIGNUP_DATA[event.EventID] ? USER_SIGNUP_DATA[event.EventID].status : 'NONE';
+
+            if (userStatus === 'SIGNUP' || userStatus === 'UPDATE') {
                 optionText += ' (已報名)';
             }
-            optionsHtml += `<option value="${event.EventID}">${optionText}</option>`;
+            select.innerHTML += `<option value="${event.EventID}">${optionText}</option>`;
         });
-        select.innerHTML = optionsHtml;
     }
 
-    // 處理活動選擇變更 (當使用者切換下拉選單時觸發)
+    // 處理活動選擇變更
     function handleEventSelection() {
         const select = document.getElementById('event-select');
         const eventId = select.value;
         const form = document.getElementById('mainForm');
         const detailsBox = document.getElementById('event-details-box');
-        const statsBox = document.getElementById('statistics-box'); // 【新增】取得統計區塊
+        const statsBox = document.getElementById('statistics-box');
 
         if (!eventId) {
             form.classList.add('hidden');
             detailsBox.classList.add('hidden');
-            statsBox.classList.add('hidden'); // 隱藏統計區塊
+            statsBox.classList.add('hidden');
             return;
         }
 
         document.getElementById('eventID').value = eventId; 
 
         const selectedEvent = ALL_EVENTS.find(e => e.EventID === eventId);
+        const currentUserSignup = USER_SIGNUP_DATA[eventId];
         
         if (selectedEvent) {
-            // 1. 顯示活動詳細資訊
             displayEventDetails(selectedEvent);
             detailsBox.classList.remove('hidden');
-
-            // 2. 【核心新增】更新統計數據顯示
             updateStatisticsDisplay(eventId);
 
-            // 3. 檢查報名狀態
-            const isSignedUpForCurrentEvent = USER_SIGNUP_DATA && USER_SIGNUP_DATA.eventId === eventId;
+            // 檢查使用者對【當前選定活動】的報名狀態
+            const isSignedUpForCurrentEvent = currentUserSignup && 
+                (currentUserSignup.status === 'SIGNUP' || currentUserSignup.status === 'UPDATE');
             
-            // 4. 填充表單並顯示按鈕
+            // 填充表單並顯示按鈕
             if (isSignedUpForCurrentEvent) {
-                document.getElementById('count').value = USER_SIGNUP_DATA.count;
-                document.getElementById('guests').value = USER_SIGNUP_DATA.guests;
+                // 已報名過此活動，載入舊資料，顯示修改/取消按鈕
+                document.getElementById('count').value = currentUserSignup.count;
+                document.getElementById('guests').value = currentUserSignup.guests;
                 showButtons('edit'); 
             } else {
+                // 未報名此活動，清空表單，顯示報名按鈕
                 document.getElementById('count').value = '1';
                 document.getElementById('guests').value = '';
                 showButtons('new'); 
@@ -313,33 +353,6 @@
         }
     }
     
-    // 【新增函式】更新活動統計數據顯示
-    function updateStatisticsDisplay(eventId) {
-        const statsBox = document.getElementById('statistics-box');
-        const currentStats = ALL_EVENT_STATS[eventId];
-
-        if (currentStats) {
-            statsBox.classList.remove('hidden');
-            document.getElementById('statSignupCount').innerText = currentStats.signupCount;
-            document.getElementById('statTotalCount').innerText = currentStats.totalCount;
-            
-            // 顯示名單，每行五個名字
-            let nameListHtml = currentStats.nameList.map((name, index) => {
-                // 每五個名字後換行
-                return (index > 0 && index % 5 === 0) ? `\n${name}` : name;
-            }).join('、');
-            
-            // 如果名單過長 (例如超過 50 人)，可以考慮截斷或提示
-            document.getElementById('nameList').innerText = nameListHtml || "目前尚無報名者。";
-        } else {
-            // 如果該活動沒有報名數據
-            statsBox.classList.remove('hidden'); 
-            document.getElementById('statSignupCount').innerText = 0;
-            document.getElementById('statTotalCount').innerText = 0;
-            document.getElementById('nameList').innerText = "目前尚無報名者。";
-        }
-    }
-
     // 顯示活動詳細資訊 (保持不變)
     function displayEventDetails(data) {
         document.getElementById('eventTitle').innerText = data.Title || "活動";
@@ -355,10 +368,33 @@
         }
     }
 
+    // 更新活動統計數據顯示 (保持不變)
+    function updateStatisticsDisplay(eventId) {
+        const statsBox = document.getElementById('statistics-box');
+        const currentStats = ALL_EVENT_STATS ? ALL_EVENT_STATS[eventId] : null;
+
+        if (currentStats) {
+            statsBox.classList.remove('hidden');
+            document.getElementById('statSignupCount').innerText = currentStats.signupCount;
+            document.getElementById('statTotalCount').innerText = currentStats.totalCount;
+            
+            let nameListHtml = currentStats.nameList.map((name, index) => {
+                return (index > 0 && index % 5 === 0) ? `\n${name}` : name;
+            }).join('、');
+            
+            document.getElementById('nameList').innerText = nameListHtml || "目前尚無報名者。";
+        } else {
+            statsBox.classList.remove('hidden'); 
+            document.getElementById('statSignupCount').innerText = 0;
+            document.getElementById('statTotalCount').innerText = 0;
+            document.getElementById('nameList').innerText = "目前尚無報名者。";
+        }
+    }
+
     // 輔助函式：格式化時間 (保持不變)
     function formatTime(timeString) {
          let displayTime = timeString || "";
-         if (displayTime && !isNaN(new Date(displayString))) {  
+         if (displayTime && !isNaN(new Date(timeString))) {  
              displayTime = new Date(timeString).toLocaleString('zh-TW', {
                  year: 'numeric', month: '2-digit', day: '2-digit',  
                  hour: '2-digit', minute: '2-digit', hour12: false
@@ -412,12 +448,15 @@
         }
 
         try {
-            await fetch(GAS_URL, {
+            const response = await fetch(GAS_URL, {
                 method: 'POST',
                 body: JSON.stringify(formData),
                 mode: 'no-cors', 
                 headers: { 'Content-Type': 'text/plain' } 
             });
+            
+            // 由於設置了 no-cors，無法直接讀取 response.json()，
+            // 但如果 GAS 腳本執行成功 (即 HTTP 請求發出成功)，我們假設資料已更新。
 
             alert(action === 'cancel' ? '已取消報名！\n\n(若為 LIFF 視窗將自動關閉)' : '資料已送出！\n\n(若為 LIFF 視窗將自動關閉)');
             
