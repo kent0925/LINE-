@@ -40,6 +40,8 @@
     </div>
 
     <form id="mainForm">
+        <input type="hidden" id="lineUserId">
+
         <label>參加人姓名 (LINE)</label>
         <input type="text" id="lineName" readonly placeholder="讀取中...">
 
@@ -71,7 +73,7 @@
 <script>
     // ================= 設定區 =================
     const LIFF_ID = "2008678090-b1Up4o0J"; 
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxTe8cE00_PK4f45I7_7NWNOC3YtFec5KmyaoGoHJ5DyWurtHivYzGmpgCGnl8-5ZXKLA/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwg_wk38RPy9hrhB8TAirfq-91g03pevBV4h7ZvOOsVc_WhlnddMMA-9NqcnmIQDJ8P/exec";
     // =========================================
 
     window.onload = async function() {
@@ -84,10 +86,13 @@
             if (liff.isLoggedIn()) {
                 const profile = await liff.getProfile();
                 const userName = profile.displayName;
-                document.getElementById('lineName').value = userName;
+                const userId = profile.userId; // <<< 抓取 User ID
                 
-                // 取得使用者名字後，去後端抓資料 (活動資訊 + 報名狀態)
-                await fetchData(userName);
+                document.getElementById('lineName').value = userName;
+                document.getElementById('lineUserId').value = userId; // <<< 儲存 User ID
+                
+                // 使用 User ID 去後端抓資料 (活動資訊 + 報名狀態)
+                await fetchData(userId); // <<< 使用 userId
             } else {
                 liff.login();
             }
@@ -97,10 +102,10 @@
     }
 
     // 整合讀取：抓活動資訊 + 檢查此人是否報名過
-    async function fetchData(userName) {
+    async function fetchData(userId) { // <<< 接收 userId
         try {
-            // 在網址後面加上參數 ?u=名字
-            const url = `${GAS_URL}?u=${encodeURIComponent(userName)}`;
+            // 在網址後面加上參數 ?u=User ID
+            const url = `${GAS_URL}?u=${encodeURIComponent(userId)}`; // <<< 網址帶入 userId
             const response = await fetch(url);
             const data = await response.json();
 
@@ -119,6 +124,7 @@
             document.getElementById('location').innerText = data.Location || "";
             
             if (data.Location) {
+                // 注意：這裡的網址結構似乎有誤，應為 'https://www.google.com/maps/search/?api=1&query='
                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.Location)}`;
                 document.getElementById('mapLinkBox').innerHTML = `<a href="${mapUrl}" target="_blank" style="color:#007bff;">📍 開啟地圖</a>`;
             }
@@ -170,12 +176,14 @@
 
         const formData = {
             action: action, // 告訴後端要做什麼
+            lineUserId: document.getElementById('lineUserId').value, // <<< 送出 User ID
             lineName: document.getElementById('lineName').value,
             count: document.getElementById('count').value,
             guests: document.getElementById('guests').value
         };
 
         try {
+            // 注意：因為使用 mode: 'no-cors'，我們無法從 fetch 得到實際的 JSON 回傳結果，只能知道請求是否成功送出
             await fetch(GAS_URL, {
                 method: 'POST',
                 body: JSON.stringify(formData),
