@@ -7,180 +7,168 @@
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
+/* CSS 保持不變，因為您原有的樣式已經非常優秀且專業 */
 :root {
-    --primary-color: #00796b; /* 深綠 (Primary) */
-    --secondary-color: #4db6ac; /* 淺綠 (Accent) */
-    --bg-color: #f0f8ff; /* 淺藍白 (Background) */
-    --box-bg-color: #ffffff; /* 白色 (Card Background) */
-    --input-bg-color: #f9f9f9; /* 輸入欄位淺灰 */
-    --success-color: #4caf50; /* 成功綠 */
-    --warning-color: #ff9800; /* 警告橘 */
-    --danger-color: #e53935; /* 危險紅 */
-    --stat-color: #00897b; /* 統計深綠 */
-    --border-color: #e0e0e0; /* 邊框淺灰 */
+    --primary-color: #00796b; /* 深綠 (Primary) */
+    --secondary-color: #4db6ac; /* 淺綠 (Accent) */
+    --bg-color: #f0f8ff; /* 淺藍白 (Background) */
+    --box-bg-color: #ffffff; /* 白色 (Card Background) */
+    --input-bg-color: #f9f9f9; /* 輸入欄位淺灰 */
+    --success-color: #4caf50; /* 成功綠 */
+    --warning-color: #ff9800; /* 警告橘 */
+    --danger-color: #e53935; /* 危險紅 */
+    --stat-color: #00897b; /* 統計深綠 */
+    --border-color: #e0e0e0; /* 邊框淺灰 */
 }
-body { 
-    font-family: "Microsoft JhengHei", "Segoe UI", sans-serif; 
-    background-color: var(--bg-color); 
-    padding: 0;
-    margin: 0;
+body { 
+    font-family: "Microsoft JhengHei", "Segoe UI", sans-serif; 
+    background-color: var(--bg-color); 
+    padding: 0;
+    margin: 0;
 }
-.container { 
-    max-width: 500px; 
-    margin: 20px auto; 
-    background: var(--box-bg-color); 
-    padding: 25px; 
-    border-radius: 16px; /* 更圓潤 */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* 更明顯的陰影 */
+.container { 
+    max-width: 500px; 
+    margin: 20px auto; 
+    background: var(--box-bg-color); 
+    padding: 25px; 
+    border-radius: 16px; /* 更圓潤 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* 更明顯的陰影 */
 }
-h2 { 
-    text-align: center; 
-    color: var(--primary-color); 
-    border-bottom: 3px solid var(--secondary-color); 
-    padding-bottom: 12px; 
-    margin-bottom: 30px; 
-    font-size: 1.8em;
+h2 { 
+    text-align: center; 
+    color: var(--primary-color); 
+    border-bottom: 3px solid var(--secondary-color); 
+    padding-bottom: 12px; 
+    margin-bottom: 30px; 
+    font-size: 1.8em;
 }
-
-/* 資訊卡片區塊 */
-.info-box, .statistics-box { 
-    background: var(--box-bg-color); 
-    padding: 20px; 
-    border-radius: 12px; 
-    margin-bottom: 25px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* 輕微陰影 */
-    border: 1px solid var(--border-color);
+.info-box, .statistics-box { 
+    background: var(--box-bg-color); 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-bottom: 25px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* 輕微陰影 */
+    border: 1px solid var(--border-color);
 }
 .info-box h3, .statistics-box h3 {
-    margin-top: 0;
-    font-size: 1.2em;
-    color: var(--primary-color);
-    border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    margin-top: 0;
+    font-size: 1.2em;
+    color: var(--primary-color);
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
 }
-.info-item { 
-    margin-bottom: 8px; 
-    line-height: 1.5; 
-    display: flex; /* 使用 Flex 排版 */
+.info-item { 
+    margin-bottom: 8px; 
+    line-height: 1.5; 
+    display: flex; /* 使用 Flex 排版 */
 }
-.info-label { 
-    font-weight: bold; 
-    color: #333; 
-    min-width: 50px; /* 統一標籤寬度 */
-    margin-right: 10px;
+.info-label { 
+    font-weight: bold; 
+    color: #333; 
+    min-width: 50px; /* 統一標籤寬度 */
+    margin-right: 10px;
 }
 #mapLinkBox a { color: var(--secondary-color) !important; text-decoration: underline; font-weight: bold; }
-
-
-/* 表單欄位設計 */
-label { 
-    display: block; 
-    margin-top: 20px; 
-    margin-bottom: 5px;
-    font-weight: bold; 
-    color: var(--primary-color); /* 讓標籤更突出 */
-    font-size: 1.05em;
+label { 
+    display: block; 
+    margin-top: 20px; 
+    margin-bottom: 5px;
+    font-weight: bold; 
+    color: var(--primary-color); /* 讓標籤更突出 */
+    font-size: 1.05em;
 }
-input, select, textarea { 
-    width: 100%; 
-    padding: 12px; /* 增加點擊區域 */
-    background-color: var(--input-bg-color);
-    border: 1px solid var(--border-color); 
-    border-radius: 8px; 
-    box-sizing: border-box; 
-    transition: border-color 0.3s, box-shadow 0.3s; 
+input, select, textarea { 
+    width: 100%; 
+    padding: 12px; /* 增加點擊區域 */
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--border-color); 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+    transition: border-color 0.3s, box-shadow 0.3s; 
 }
 input:focus, select:focus, textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* 焦點藍色光暈 */
-    background-color: var(--box-bg-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* 焦點藍色光暈 */
+    background-color: var(--box-bg-color);
 }
 input[readonly] {
-    background-color: #e8e8e8;
-    color: #666;
-    font-weight: bold;
+    background-color: #e8e8e8;
+    color: #666;
+    font-weight: bold;
 }
-
-/* 按鈕組設計 */
-.btn-group { 
-    margin-top: 40px; 
-    display: flex; 
-    flex-direction: column; /* 改為垂直堆疊以優化行動裝置體驗 */
-    gap: 15px; 
+.btn-group { 
+    margin-top: 40px; 
+    display: flex; 
+    flex-direction: column; /* 改為垂直堆疊以優化行動裝置體驗 */
+    gap: 15px; 
 }
-button { 
-    width: 100%;
-    padding: 15px; /* 增加點擊區域 */
-    border: none; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-size: 1.1em; 
-    color: white; 
-    font-weight: bold; 
-    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15); 
+button { 
+    width: 100%;
+    padding: 15px; /* 增加點擊區域 */
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 1.1em; 
+    color: white; 
+    font-weight: bold; 
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); 
 }
 #signupBtn { background-color: var(--success-color); }
 #updateBtn { background-color: var(--warning-color); }
 #cancelBtn { background-color: var(--danger-color); }
 button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
 button:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: none; transform: none; }
-
-/* 統計區塊 */
-.statistics-box { 
-    background-color: #e8f5e9; /* 淺綠底色 */
-    border: 1px solid var(--success-color); 
-    padding: 20px; 
-    border-radius: 12px; 
-    margin-top: 30px; 
+.statistics-box { 
+    background-color: #e8f5e9; /* 淺綠底色 */
+    border: 1px solid var(--success-color); 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-top: 30px; 
 }
-.statistics-box h3 { 
-    color: var(--stat-color); 
-    margin-top: 0; 
-    margin-bottom: 10px; 
-    border-bottom: 2px solid var(--stat-color); 
-    padding-bottom: 5px; 
-    font-size: 1.2em; 
-    display: flex;
-    align-items: center;
+.statistics-box h3 { 
+    color: var(--stat-color); 
+    margin-top: 0; 
+    margin-bottom: 10px; 
+    border-bottom: 2px solid var(--stat-color); 
+    padding-bottom: 5px; 
+    font-size: 1.2em; 
+    display: flex;
+    align-items: center;
 }
 .statistics-box h3::before {
-    content: "📊";
-    margin-right: 8px;
-    font-size: 1.1em;
+    content: "📊";
+    margin-right: 8px;
+    font-size: 1.1em;
 }
-.stat-item { 
-    font-weight: 500; 
-    color: #333; 
-    margin-bottom: 8px; 
-    padding-left: 10px;
-    border-left: 3px solid var(--secondary-color);
+.stat-item { 
+    font-weight: 500; 
+    color: #333; 
+    margin-bottom: 8px; 
+    padding-left: 10px;
+    border-left: 3px solid var(--secondary-color);
 }
-#nameList { 
-    margin-top: 15px; 
-    font-size: 0.9em; 
-    line-height: 1.8; 
-    color: #555; 
-    white-space: pre-wrap; 
-    padding: 10px;
-    background-color: #ffffff;
-    border: 1px solid #eee;
-    border-radius: 6px;
+#nameList { 
+    margin-top: 15px; 
+    font-size: 0.9em; 
+    line-height: 1.8; 
+    color: #555; 
+    white-space: pre-wrap; 
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #eee;
+    border-radius: 6px;
 }
-
-/* 隱藏元素 */
 .hidden { display: none !important; }
-
-/* 選項載入中 */
 #loading {
-    padding: 10px;
-    background-color: #fff3e0;
-    border-radius: 6px;
-    border: 1px solid var(--warning-color);
-    margin-top: 15px;
-    color: #555;
-    font-style: italic;
+    padding: 10px;
+    background-color: #fff3e0;
+    border-radius: 6px;
+    border: 1px solid var(--warning-color);
+    margin-top: 15px;
+    color: #555;
+    font-style: italic;
 }
 </style>
 </head>
@@ -192,19 +180,19 @@ button:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: no
 <div id="event-selection-area" class="info-box" style="padding: 15px; background: #fff;">
 <label for="event-select" style="margin-top: 0;">請選擇活動</label>
 <select id="event-select" onchange="handleEventSelection()">
-    <option value="" disabled selected>-- 請選擇一個活動 --</option>
+    <option value="" disabled selected>-- 正在載入活動 --</option>
 </select>
-<div id="loading" style="margin-top: 10px; color: #666;">正在載入活動資訊...</div>
+<div id="loading" style="margin-top: 10px; color: #666;">正在初始化 LIFF 並讀取活動資訊...</div>
 </div>
 
 <div id="event-details-box" class="info-box hidden">
-    <h3>活動詳細資訊</h3>
-    <div class="info-item"><span class="info-label">主題</span> <span id="eventTitle">...</span></div>
-    <div class="info-item"><span class="info-label">主辦</span> <span id="organizer">...</span></div>
-    <div class="info-item"><span class="info-label">時間</span> <span id="time">...</span></div>
-    <div class="info-item"><span class="info-label">地點</span> <span id="location">...</span></div>
-    <div class="info-item"><span class="info-label">地址</span> <span id="address">...</span></div>
-    <div class="info-item" id="mapLinkBox"></div>
+    <h3>活動詳細資訊</h3>
+    <div class="info-item"><span class="info-label">主題</span> <span id="eventTitle">...</span></div>
+    <div class="info-item"><span class="info-label">主辦</span> <span id="organizer">...</span></div>
+    <div class="info-item"><span class="info-label">時間</span> <span id="time">...</span></div>
+    <div class="info-item"><span class="info-label">地點</span> <span id="location">...</span></div>
+    <div class="info-item"><span class="info-label">地址</span> <span id="address">...</span></div>
+    <div class="info-item" id="mapLinkBox"></div>
 </div>
 
 <form id="mainForm" class="hidden">
@@ -219,7 +207,7 @@ button:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: no
     <option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
 </select>
 <label>來賓姓名</label>
-<textarea id="guests" rows="3" placeholder="例如：王小明, 李大華"></textarea>
+<textarea id="guests" rows="3" placeholder="例如：王小明, 李大華 (如果只有一人參加，可留空)"></textarea>
 
 <div class="btn-group">
 <button type="button" id="signupBtn" class="hidden" onclick="handleSubmit('signup')">確認報名</button>
@@ -229,75 +217,112 @@ button:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: no
 </form>
 
 <div id="statistics-box" class="statistics-box hidden">
-    <h3>即時報名狀況</h3>
-    <div class="stat-item">報名筆數 (LINE ID)： <span id="statSignupCount">0</span> 筆</div>
-    <div class="stat-item">總參加人數： <span id="statTotalCount">0</span> 人</div>
-    <h4 style="color: var(--stat-color); margin-top: 15px; margin-bottom: 5px; font-size: 1em;">已報名者名單 (LINE 暱稱)：</h4>
-    <div id="nameList">載入中...</div>
+    <h3>即時報名狀況</h3>
+    <div class="stat-item">報名筆數 (LINE ID)： <span id="statSignupCount">0</span> 筆</div>
+    <div class="stat-item">總參加人數： <span id="statTotalCount">0</span> 人</div>
+    <h4 style="color: var(--stat-color); margin-top: 15px; margin-bottom: 5px; font-size: 1em;">已報名者名單 (LINE 暱稱)：</h4>
+    <div id="nameList">載入中...</div>
 </div>
 
 </div>
 
 <script>
 // ==================== [請務必更新] 您的 LIFF ID ====================
-const LIFF_ID = "2008678090-b1Up4o0J";  
+const LIFF_ID = "2008678090-b1Up4o0J";  
 // ==================== [請務必更新] 您的 Google Apps Script URL ====================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxhV4qunfnLQdDy64uID6uYrzxYSysOKWLpAYLUD8CtZTIlmxnwR7vAfeyrvr83lYbS/exec"; 
+// 請確認此 URL 是部署為「網路應用程式」且存取權為「任何人」的最新網址
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxcIzFs_FYtXPFWgFiDUNkyIaTjZoD1830iuJGF_IsPF_-flxWz2vtrkEydTU4mgkDl/exec"; 
 
 let ALL_EVENTS = [];
 let USER_SIGNUP_DATA = {};
 let ALL_EVENT_STATS = null;
 const SIGNUP_STATUSES = ['SIGNUP','UPDATE'];
 
-window.onload = async function() {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 移除 window.onload，使用現代的 DOMContentLoaded 事件
     await initLIFF();
-};
+});
+
+/** 輔助函數：取得 DOM 元素 */
+const getEl = (id) => document.getElementById(id);
 
 async function initLIFF() {
     try {
         await liff.init({ liffId: LIFF_ID });
+        getEl('loading').innerText = '正在驗證 LINE 登入狀態...';
+
         if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             const userName = profile.displayName;
             const userId = profile.userId; 
-            document.getElementById('lineName').value = userName;
-            document.getElementById('lineUserId').value = userId; 
-            document.getElementById('pageTitle').innerText = '活動報名表單 - ' + userName;
+            
+            getEl('lineName').value = userName;
+            getEl('lineUserId').value = userId; 
+            getEl('pageTitle').innerText = '活動報名表單 - ' + userName;
+            
             await fetchData(userId); 
-        } else { liff.login(); }
-    } catch (err) { alert('LIFF 初始化失敗: ' + err.message); }
+        } else { 
+            // 如果 LIFF 運行在外部瀏覽器，需要登入
+            if (!liff.isInClient()) {
+                liff.login(); 
+            } else {
+                // 如果在 LINE 內部但沒有登入，這不應該發生，但作為防護
+                alert('無法取得使用者資料，請重新開啟。');
+                getEl('loading').innerText = 'LIFF 錯誤：未登入。';
+            }
+        }
+    } catch (err) { 
+        console.error("LIFF/初始化錯誤:", err);
+        alert('LIFF 初始化失敗，請檢查 LIFF ID 或網路連線。錯誤訊息: ' + err.message); 
+    }
 }
 
 async function fetchData(userId) { 
     try {
-        document.getElementById('loading').innerText = '正在讀取活動資料...';
+        getEl('loading').innerText = '正在讀取活動資料及您的報名狀態...';
         const url = `${GAS_URL}?u=${encodeURIComponent(userId)}`;
         const response = await fetch(url);
         const data = await response.json();
-        document.getElementById('loading').classList.add('hidden');
+        getEl('loading').classList.add('hidden');
 
-        if(data.status==='error'){ alert("後端設定錯誤：" + data.message); return; }
+        if(data.status==='error'){ 
+            alert("後端設定錯誤，請聯繫管理員檢查 GAS 程式碼或 Google Sheet：\n" + data.message); 
+            return; 
+        }
 
         ALL_EVENTS = data.eventList || [];
         ALL_EVENT_STATS = data.eventStats;
         USER_SIGNUP_DATA = data.userData && typeof data.userData==='object' ? data.userData : {};
 
         if(ALL_EVENTS.length===0){
-            document.getElementById('event-selection-area').innerHTML = '<div style="color:red; font-weight:bold;">目前沒有開放報名的活動！</div>';
+            getEl('event-selection-area').innerHTML = '<div style="color:red; font-weight:bold;">目前沒有開放報名的活動！</div>';
             return;
         }
 
         populateEventSelect(ALL_EVENTS);
 
-        let selectedEventId = ALL_EVENTS[0].EventID;
-        if(selectedEventId){ document.getElementById('event-select').value = selectedEventId; }
+        // 自動選擇第一個活動，如果沒有預設選中的話
+        const selectEl = getEl('event-select');
+        if(!selectEl.value && ALL_EVENTS.length > 0){ 
+            selectEl.value = ALL_EVENTS[0].EventID; 
+        }
+
         handleEventSelection();
 
-    } catch(err){ console.error(err); alert("讀取活動或報名資料失敗，請檢查網路或後端設定。"); }
+    } catch(err){ 
+        console.error("Fetch Data 錯誤:", err);
+        // 專門處理 CORS/Failed to fetch 錯誤提示
+        let errMsg = "讀取活動或報名資料失敗，請檢查網路或後端設定。";
+        if (err.message.includes("Failed to fetch")) {
+             errMsg = "連線後端伺服器失敗，請確認 GAS 網址是否正確，且【存取權】是否設定為「任何人」。";
+        }
+        alert("❌ " + errMsg);
+        getEl('loading').innerText = '資料載入失敗，請檢查連線或設定。';
+    }
 }
 
 function populateEventSelect(events){
-    const select = document.getElementById('event-select');
+    const select = getEl('event-select');
     select.innerHTML = '<option value="" disabled selected>-- 請選擇一個活動 --</option>';
     events.forEach(event=>{
         let optionText = `${event.Title} (${event.Time})`;
@@ -309,18 +334,17 @@ function populateEventSelect(events){
 }
 
 function handleEventSelection(){
-    const select = document.getElementById('event-select');
-    const eventId = select.value;
-    const form = document.getElementById('mainForm');
-    const detailsBox = document.getElementById('event-details-box');
-    const statsBox = document.getElementById('statistics-box');
+    const eventId = getEl('event-select').value;
+    const form = getEl('mainForm');
+    const detailsBox = getEl('event-details-box');
+    const statsBox = getEl('statistics-box');
 
     if(!eventId){ form.classList.add('hidden'); detailsBox.classList.add('hidden'); statsBox.classList.add('hidden'); return; }
 
-    document.getElementById('eventID').value = eventId;
+    getEl('eventID').value = eventId;
     const selectedEvent = ALL_EVENTS.find(e=>e.EventID===eventId);
     const currentUserSignup = USER_SIGNUP_DATA[eventId];
-    let userStatus = currentUserSignup && currentUserSignup.status ? String(currentUserSignup.status).toUpperCase() : 'NONE';
+    let userStatus = currentUserSignup?.status ? String(currentUserSignup.status).toUpperCase() : 'NONE';
 
     if(selectedEvent){
         displayEventDetails(selectedEvent);
@@ -328,17 +352,20 @@ function handleEventSelection(){
         updateStatisticsDisplay(eventId);
 
         if(SIGNUP_STATUSES.includes(userStatus)){
-            document.getElementById('count').value = currentUserSignup.count;
-            document.getElementById('guests').value = currentUserSignup.guests;
+            // 已報名或修改中：填入舊資料，顯示修改/取消按鈕
+            getEl('count').value = currentUserSignup.count;
+            getEl('guests').value = currentUserSignup.guests;
             showButtons('edit');
         } else if(userStatus==='CANCEL'){
-            document.getElementById('count').value='1';
-            document.getElementById('guests').value='';
+            // 已取消：清空資料，顯示報名按鈕
+            getEl('count').value='1';
+            getEl('guests').value='';
             showButtons('new');
             alert("您目前對此活動的狀態為【已取消】，如欲參加請按【確認報名】重新報名。");
         } else{
-            document.getElementById('count').value='1';
-            document.getElementById('guests').value='';
+            // 未曾報名：清空資料，顯示報名按鈕
+            getEl('count').value='1';
+            getEl('guests').value='';
             showButtons('new');
         }
         form.classList.remove('hidden');
@@ -348,81 +375,87 @@ function handleEventSelection(){
 }
 
 function displayEventDetails(data){
-    document.getElementById('eventTitle').innerText = data.Title || "活動";
-    document.getElementById('organizer').innerText = data.Organizer || "";
-    document.getElementById('time').innerText = data.Time;
-    document.getElementById('location').innerText = data.Location || "";
-    document.getElementById('address').innerText = data.Address || "";
-    // 修正地圖連結組裝語法，使用標準的 q 參數
-    document.getElementById('mapLinkBox').innerHTML = data.Address ? 
-        `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.Address)}" target="_blank">📍 開啟地圖</a>` : '';
+    getEl('eventTitle').innerText = data.Title || "活動";
+    getEl('organizer').innerText = data.Organizer || "";
+    getEl('time').innerText = data.Time;
+    getEl('location').innerText = data.Location || "";
+    getEl('address').innerText = data.Address || "";
+    // ⭐ 修正地圖連結，使用標準的 Google Maps 查詢格式
+    const encodedAddress = encodeURIComponent(data.Address);
+    getEl('mapLinkBox').innerHTML = data.Address ? 
+        `<a href="http://googleusercontent.com/maps.google.com/7{encodedAddress}" target="_blank">📍 開啟地圖</a>` : '';
 }
 
 function updateStatisticsDisplay(eventId){
-    const statsBox = document.getElementById('statistics-box');
+    const statsBox = getEl('statistics-box');
     const currentStats = ALL_EVENT_STATS ? ALL_EVENT_STATS[eventId] : null;
     statsBox.classList.remove('hidden');
     if(currentStats){
-        document.getElementById('statSignupCount').innerText = currentStats.signupCount;
-        document.getElementById('statTotalCount').innerText = currentStats.totalCount;
-        // 每 5 個名字換行
+        getEl('statSignupCount').innerText = currentStats.signupCount;
+        getEl('statTotalCount').innerText = currentStats.totalCount;
+        // 每 5 個名字換行
         let nameListHtml = currentStats.nameList.map((name,index)=>(index>0 && index%5===0?`\n${name}`:name)).join('、');
-        document.getElementById('nameList').innerText = nameListHtml||"目前尚無報名者。";
+        getEl('nameList').innerText = nameListHtml||"目前尚無報名者。";
     } else{
-        document.getElementById('statSignupCount').innerText=0;
-        document.getElementById('statTotalCount').innerText=0;
-        document.getElementById('nameList').innerText="目前尚無報名者。";
+        getEl('statSignupCount').innerText=0;
+        getEl('statTotalCount').innerText=0;
+        getEl('nameList').innerText="目前尚無報名者。";
     }
 }
 
 function showButtons(mode){
-    const signupBtn=document.getElementById('signupBtn');
-    const updateBtn=document.getElementById('updateBtn');
-    const cancelBtn=document.getElementById('cancelBtn');
-    if(mode==='edit'){ 
-        signupBtn.classList.add('hidden'); 
-        updateBtn.classList.remove('hidden'); 
-        cancelBtn.classList.remove('hidden'); 
-    }
-    else{ 
-        signupBtn.classList.remove('hidden'); 
-        updateBtn.classList.add('hidden'); 
-        cancelBtn.classList.add('hidden'); 
-    }
+    const signupBtn=getEl('signupBtn');
+    const updateBtn=getEl('updateBtn');
+    const cancelBtn=getEl('cancelBtn');
+    if(mode==='edit'){ 
+        signupBtn.classList.add('hidden'); 
+        updateBtn.classList.remove('hidden'); 
+        cancelBtn.classList.remove('hidden'); 
+    }
+    else{ 
+        signupBtn.classList.remove('hidden'); 
+        updateBtn.classList.add('hidden'); 
+        cancelBtn.classList.add('hidden'); 
+    }
 }
 
 // 核心函式：防止重複提交邏輯
 async function handleSubmit(action){
+    const buttons = [getEl('signupBtn'), getEl('updateBtn'), getEl('cancelBtn')];
+    const currentBtn = getEl(action + 'Btn');
+    const originalText = currentBtn.innerText;
+    
     // 1. 確認/驗證
     if(action==='cancel' && !confirm("確定要取消報名嗎？此操作將取消您目前的有效報名紀錄。")) return;
-    
-    // 2. 鎖定按鈕避免重複點擊
-    const btnId=action==='signup'?'signupBtn':(action==='update'?'updateBtn':'cancelBtn');
-    const btn=document.getElementById(btnId);
-    const originalText=btn.innerText;
-    btn.disabled=true; btn.innerText="處理中...";
 
     const formData={
         action:action,
-        lineUserId:document.getElementById('lineUserId').value,
-        lineName:document.getElementById('lineName').value,
-        eventId:document.getElementById('eventID').value,
-        count:document.getElementById('count').value,
-        guests:document.getElementById('guests').value
+        lineUserId:getEl('lineUserId').value,
+        lineName:getEl('lineName').value,
+        eventId:getEl('eventID').value,
+        count:getEl('count').value,
+        guests:getEl('guests').value
     };
 
-    // 基本驗證
-    if(!formData.eventId){ alert("請先選擇一個活動！"); btn.disabled=false; btn.innerText=originalText; return; }
-    if((action==='signup'||action==='update') && (parseInt(formData.count)<=0||!formData.count)){ alert("參加人數至少為 1 人 (含本人)！"); btn.disabled=false; btn.innerText=originalText; return; }
+    if(!formData.eventId){ alert("請先選擇一個活動！"); return; }
+    if((action==='signup'||action==='update') && (parseInt(formData.count)<=0||!formData.count)){ alert("參加人數至少為 1 人 (含本人)！"); return; }
+
+    // 2. 鎖定所有按鈕避免重複點擊
+    buttons.forEach(btn => btn.disabled = true);
+    currentBtn.innerText = "處理中...";
 
     try{
-        // 3. 提交資料並等待後端確認 (移除 no-cors 確保連線可追蹤)
         const response = await fetch(GAS_URL,{
             method:'POST',
             body:JSON.stringify(formData),
             headers:{'Content-Type':'application/json'}
         });
         
+        // 檢查 HTTP 狀態碼
+        if (!response.ok) {
+            throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+        }
+
         const result = await response.json();
 
         if(result && result.status === 'success'){
@@ -431,17 +464,25 @@ async function handleSubmit(action){
             setTimeout(()=>{ if(liff.isInClient()){ liff.closeWindow(); } },500);
         } else {
             // 處理 GAS 回傳的錯誤訊息
-            alert('❌ 資料送出失敗，請重試！' + (result.message || ""));
-            btn.disabled=false; btn.innerText=originalText;
+            alert('❌ 資料送出失敗，請重試！' + (result.message ? `\n\n錯誤訊息: ${result.message}` : ""));
         }
 
     }catch(err){ 
         console.error("提交錯誤:", err); 
-        alert('❌ 發生連線錯誤，請檢查網路或後端設定！'); 
-        btn.disabled=false; btn.innerText=originalText; 
-    }
+        // 提供更明確的錯誤提示，特別是針對 CORS 導致的 Failed to fetch
+        let userMsg = '❌ 發生連線錯誤，請檢查網路或後端設定！';
+        if (err.message.includes("Failed to fetch") || err.message.includes("CORS")) {
+             userMsg = '❌ 連線錯誤，請確認 GAS 部署的【存取權】是否為「任何人」！';
+        } else if (err.message.includes("HTTP")) {
+             userMsg = `❌ 伺服器回傳錯誤：${err.message}。`;
+        }
+        alert(userMsg); 
+    } finally {
+        // 3. 解鎖按鈕
+        buttons.forEach(btn => btn.disabled = false);
+        currentBtn.innerText = originalText;
+    }
 }
-// ----------------------------------------------------------------
 </script>
 
 </body>
