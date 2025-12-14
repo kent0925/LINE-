@@ -91,18 +91,26 @@ input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5
 const GAS_URL='https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
+// 將 ISO 時間固定轉台北時間
+function formatTpeTime(isoString){
+    const d = new Date(isoString);
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const tpe = new Date(utc + 8*3600*1000);
+    return `${tpe.getFullYear()}/${('0'+(tpe.getMonth()+1)).slice(-2)}/${('0'+tpe.getDate()).slice(-2)} ${('0'+tpe.getHours()).slice(-2)}:${('0'+tpe.getMinutes()).slice(-2)}`;
+}
+
 async function initializeLiff(){
     liff.init({liffId:'2008678090-aXTesgDK'})
     .then(()=>{
-        if(!liff.isLoggedIn()){ liff.login(); return; }
+        if(!liff.isLoggedIn()){liff.login(); return;}
         liff.getProfile().then(profile=>{
-            LINE_UID = profile.userId;
-            LINE_NICKNAME = profile.displayName;
-            document.getElementById('line-nickname').textContent = LINE_NICKNAME;
-            document.getElementById('line-uid').value = LINE_UID;
+            LINE_UID=profile.userId;
+            LINE_NICKNAME=profile.displayName;
+            document.getElementById('line-nickname').textContent=LINE_NICKNAME;
+            document.getElementById('line-uid').value=LINE_UID;
             loadEventsList();
-        }).catch(err=>{ console.error(err); alert('取得個人資料失敗'); });
-    }).catch(err=>{ console.error(err); alert('LIFF初始化失敗'); });
+        }).catch(err=>{console.error(err); alert('取得個人資料失敗');});
+    }).catch(err=>{console.error(err); alert('LIFF初始化失敗');});
 }
 
 async function loadEventsList(){
@@ -113,8 +121,7 @@ async function loadEventsList(){
         const sel=document.getElementById('event-select');
         sel.innerHTML=`<option value="">-- 請選擇一項活動 --</option>`;
         ALL_EVENTS.forEach(ev=>{
-            let eventTime = formatLocalTime(ev.Time);
-            let label=`${ev.Title} (${eventTime})`;
+            let label=`${ev.Title} (${formatTpeTime(ev.Time)})`;
             if(ev.UserRegistered) label+=' [已報名]';
             sel.innerHTML+=`<option value="${ev.EventID}">${label}</option>`;
         });
@@ -126,39 +133,32 @@ async function loadEventsList(){
     }
 }
 
-// ISO 字串轉本地時間格式 yyyy/MM/dd HH:mm
-function formatLocalTime(isoString){
-    if(!isoString) return '';
-    const d = new Date(isoString);
-    return `${d.getFullYear()}/${('0'+(d.getMonth()+1)).slice(-2)}/${('0'+d.getDate()).slice(-2)} ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`;
-}
-
 function selectEvent(eventId){
     if(!eventId) return;
-    CURRENT_EVENT_ID = eventId;
-    const ev = ALL_EVENTS.find(e => e.EventID === eventId);
+    CURRENT_EVENT_ID=eventId;
+    const ev=ALL_EVENTS.find(e=>e.EventID===eventId);
     document.getElementById('activity-info').style.display='block';
-    document.getElementById('info-title').textContent = ev.Title;
-    document.getElementById('info-organizer').textContent = ev.Organizer;
-    document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
-    document.getElementById('info-location').textContent = ev.Address;
-    document.getElementById('info-map-link').href = ev.MapUrl;
+    document.getElementById('info-title').textContent=ev.Title;
+    document.getElementById('info-organizer').textContent=ev.Organizer;
+    document.getElementById('info-time').textContent=formatTpeTime(ev.Time);
+    document.getElementById('info-location').textContent=ev.Address;
+    document.getElementById('info-map-link').href=ev.MapUrl;
     document.getElementById('registration-form').style.display='block';
     loadStatsAndStatus(eventId);
 }
 
 async function loadStatsAndStatus(eventId, force=false){
     if(!eventId) return;
-    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-    const data = await res.json();
+    const res=await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+    const data=await res.json();
     if(data.status==='success'){
-        document.getElementById('total-attendees').textContent = data.totalAttendees;
+        document.getElementById('total-attendees').textContent=data.totalAttendees;
         const ul=document.getElementById('registered-list');
         ul.innerHTML='';
-        data.registeredUsers.forEach(u => ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
+        data.registeredUsers.forEach(u=>ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
         if(data.userStatus){
-            document.getElementById('attendees-count').value = data.userStatus.Attendees_Count||1;
-            document.getElementById('guest-names').value = data.userStatus.Guest_Names||'';
+            document.getElementById('attendees-count').value=data.userStatus.Attendees_Count||1;
+            document.getElementById('guest-names').value=data.userStatus.Guest_Names||'';
         }
         document.getElementById('statistics').style.display='block';
     }
@@ -166,25 +166,20 @@ async function loadStatsAndStatus(eventId, force=false){
 
 async function submitRegistration(action){
     if(!CURRENT_EVENT_ID) return;
-    const payload = {
-        action: action,
-        eventId: CURRENT_EVENT_ID,
-        lineUid: LINE_UID,
-        lineNickname: LINE_NICKNAME,
-        attendeesCount: parseInt(document.getElementById('attendees-count').value),
-        guestNames: document.getElementById('guest-names').value
+    const payload={
+        action:action,
+        eventId:CURRENT_EVENT_ID,
+        lineUid:LINE_UID,
+        lineNickname:LINE_NICKNAME,
+        attendeesCount:parseInt(document.getElementById('attendees-count').value),
+        guestNames:document.getElementById('guest-names').value
     };
-    const res = await fetch(GAS_URL, {method:'POST', body: JSON.stringify(payload)});
-    const data = await res.json();
-    const msgEl = document.getElementById('form-message');
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const data=await res.json();
+    const msgEl=document.getElementById('form-message');
     msgEl.style.display='block';
-    if(data.status==='success'){
-        msgEl.className='message success'; 
-        msgEl.textContent = data.message;
-    } else {
-        msgEl.className='message error'; 
-        msgEl.textContent = data.message;
-    }
+    if(data.status==='success'){ msgEl.className='message success'; msgEl.textContent=data.message; }
+    else{ msgEl.className='message error'; msgEl.textContent=data.message; }
     loadStatsAndStatus(CURRENT_EVENT_ID,true);
     loadEventsList(); // 更新選單上的已報名標示
 }
