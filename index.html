@@ -24,6 +24,22 @@ input[type="text"], select, textarea { width:100%; padding:10px; margin-top:5px;
 .stats-list li:last-child { border-bottom:none; }
 #form-actions { display:flex; justify-content:space-around; }
 .loading { text-align:center; padding:30px; }
+
+/* ⭐️ 新增：地圖連結按鈕樣式 */
+.btn-map {
+    display: inline-block;
+    padding: 3px 8px; 
+    margin-left: 10px;
+    background-color: #4285F4; /* Google 藍色 */
+    color: white !important;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: normal; 
+    font-size: 0.9em;
+}
+.btn-map:hover {
+    background-color: #357ae8; 
+}
 </style>
 </head>
 <body>
@@ -37,7 +53,7 @@ input[type="text"], select, textarea { width:100%; padding:10px; margin-top:5px;
 <h2>選擇報名活動</h2>
 <label for="event-select">可報名活動列表</label>
 <select id="event-select" onchange="selectEvent(this.value)">
-  <option value="">-- 請選擇一項活動 --</option>
+  <option value="">-- 請選擇一項活動 --</option>
 </select>
 <div id="select-message" class="message"></div>
 </div>
@@ -46,9 +62,8 @@ input[type="text"], select, textarea { width:100%; padding:10px; margin-top:5px;
 <h2>活動資訊 - <span id="info-title"></span></h2>
 <p><strong>主辦:</strong> <span id="info-organizer"></span></p>
 <p><strong>時間:</strong> <span id="info-time"></span></p>
-<p><strong>店名:</strong> <span id="info-venue-name"></span></p> 
-<p><strong>地點:</strong> <span id="info-location"></span> (<a id="info-map-link" href="#" target="_blank">Google 地圖</a>)</p>
-</div>
+<p><strong>店名:</strong> <span id="info-venue-name"></span></p> 
+<p><strong>地點:</strong> <span id="info-location"></span> (<a id="info-map-link" href="#" target="_blank" aria-label="開啟 Google 地圖" class="btn-map">📌 開啟地圖</a>)</p> </div>
 
 <div id="registration-form" class="form-section" style="display:none;">
 <h2>您的報名資料</h2>
@@ -62,9 +77,9 @@ input[type="text"], select, textarea { width:100%; padding:10px; margin-top:5px;
 <textarea id="guest-names" rows="2" placeholder="例如：王小明, 陳小美"></textarea>
 
 <div id="form-actions">
-  <button class="btn btn-register" onclick="submitRegistration('register')">報名</button>
-  <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
-  <button class="btn btn-modify" onclick="submitRegistration('edit')">編輯</button>
+  <button class="btn btn-register" onclick="submitRegistration('register')">報名</button>
+  <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
+  <button class="btn btn-modify" onclick="submitRegistration('edit')">編輯</button>
 </div>
 
 <div id="form-message" class="message"></div>
@@ -84,39 +99,39 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
 async function initializeLiff(){
-    await liff.init({liffId:'2008678090-aXTesgDK'});
-    if(!liff.isLoggedIn()){ liff.login(); return; }
-    const profile = await liff.getProfile();
-    LINE_UID = profile.userId;
-    LINE_NICKNAME = profile.displayName;
-    document.getElementById('line-nickname').textContent = LINE_NICKNAME;
-    document.getElementById('line-uid').value = LINE_UID;
-    loadEventsList();
+    await liff.init({liffId:'2008678090-aXTesgDK'});
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    const profile = await liff.getProfile();
+    LINE_UID = profile.userId;
+    LINE_NICKNAME = profile.displayName;
+    document.getElementById('line-nickname').textContent = LINE_NICKNAME;
+    document.getElementById('line-uid').value = LINE_UID;
+    loadEventsList();
 }
 
 async function loadEventsList(){
-    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-    const data = await res.json();
-    if(data.status==='success'){
-        ALL_EVENTS = data.events;
-        const sel=document.getElementById('event-select');
-        sel.innerHTML=`<option value="">-- 請選擇一項活動 --</option>`;
-        ALL_EVENTS.forEach(ev=>{
-            let label=`${ev.Title} (${formatLocalTime(ev.Time)})`;
-            if(ev.UserRegistered) label+=' [已報名]';
-            sel.innerHTML+=`<option value="${ev.EventID}">${label}</option>`;
-        });
-        document.getElementById('event-selection').style.display='block';
-        const countSel=document.getElementById('attendees-count');
-        countSel.innerHTML='';
-        for(let i=1;i<=10;i++) countSel.innerHTML+=`<option value="${i}">${i}</option>`;
-        document.getElementById('loading-spinner').style.display='none';
-    }
+    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+    const data = await res.json();
+    if(data.status==='success'){
+        ALL_EVENTS = data.events;
+        const sel=document.getElementById('event-select');
+        sel.innerHTML=`<option value="">-- 請選擇一項活動 --</option>`;
+        ALL_EVENTS.forEach(ev=>{
+            let label=`${ev.Title} (${formatLocalTime(ev.Time)})`;
+            if(ev.UserRegistered) label+=' [已報名]';
+            sel.innerHTML+=`<option value="${ev.EventID}">${label}</option>`;
+        });
+        document.getElementById('event-selection').style.display='block';
+        const countSel=document.getElementById('attendees-count');
+        countSel.innerHTML='';
+        for(let i=1;i<=10;i++) countSel.innerHTML+=`<option value="${i}">${i}</option>`;
+        document.getElementById('loading-spinner').style.display='none';
+    }
 }
 
 function formatLocalTime(isoStr){
-    const d = new Date(isoStr);
-    return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const d = new Date(isoStr);
+    return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function pad(n){ return n<10 ? '0'+n : n; }
 
@@ -128,9 +143,9 @@ function selectEvent(eventId){
     document.getElementById('info-title').textContent = ev.Title;
     document.getElementById('info-organizer').textContent = ev.Organizer;
     document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
-    
+    
     document.getElementById('info-venue-name').textContent = ev.VenueName; // ⭐️ 新增：讀取並顯示 VenueName
-    
+    
     document.getElementById('info-location').textContent = ev.Address;
     document.getElementById('info-map-link').href = ev.MapUrl;
     document.getElementById('registration-form').style.display='block';
@@ -138,40 +153,40 @@ function selectEvent(eventId){
 }
 
 async function loadStatsAndStatus(eventId, force=false){
-    if(!eventId) return;
-    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-    const data = await res.json();
-    if(data.status==='success'){
-        document.getElementById('total-attendees').textContent = data.totalAttendees;
-        const ul = document.getElementById('registered-list');
-        ul.innerHTML = '';
-        data.registeredUsers.forEach(u=>ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
-        if(data.userStatus){
-            document.getElementById('attendees-count').value = data.userStatus.Attendees_Count||1;
-            document.getElementById('guest-names').value = data.userStatus.Guest_Names||'';
-        }
-        document.getElementById('statistics').style.display='block';
-    }
+    if(!eventId) return;
+    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+    const data = await res.json();
+    if(data.status==='success'){
+        document.getElementById('total-attendees').textContent = data.totalAttendees;
+        const ul = document.getElementById('registered-list');
+        ul.innerHTML = '';
+        data.registeredUsers.forEach(u=>ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
+        if(data.userStatus){
+            document.getElementById('attendees-count').value = data.userStatus.Attendees_Count||1;
+            document.getElementById('guest-names').value = data.userStatus.Guest_Names||'';
+        }
+        document.getElementById('statistics').style.display='block';
+    }
 }
 
 async function submitRegistration(action){
-    if(!CURRENT_EVENT_ID) return;
-    const payload = {
-        action: action,
-        eventId: CURRENT_EVENT_ID,
-        lineUid: LINE_UID,
-        lineNickname: LINE_NICKNAME,
-        attendeesCount: parseInt(document.getElementById('attendees-count').value),
-        guestNames: document.getElementById('guest-names').value
-    };
-    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
-    const data = await res.json();
-    const msgEl = document.getElementById('form-message');
-    msgEl.style.display='block';
-    if(data.status==='success'){ msgEl.className='message success'; msgEl.textContent = data.message; }
-    else{ msgEl.className='message error'; msgEl.textContent = data.message; }
-    loadStatsAndStatus(CURRENT_EVENT_ID,true);
-    loadEventsList();
+    if(!CURRENT_EVENT_ID) return;
+    const payload = {
+        action: action,
+        eventId: CURRENT_EVENT_ID,
+        lineUid: LINE_UID,
+        lineNickname: LINE_NICKNAME,
+        attendeesCount: parseInt(document.getElementById('attendees-count').value),
+        guestNames: document.getElementById('guest-names').value
+    };
+    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const data = await res.json();
+    const msgEl = document.getElementById('form-message');
+    msgEl.style.display='block';
+    if(data.status==='success'){ msgEl.className='message success'; msgEl.textContent = data.message; }
+    else{ msgEl.className='message error'; msgEl.textContent = data.message; }
+    loadStatsAndStatus(CURRENT_EVENT_ID,true);
+    loadEventsList();
 }
 
 initializeLiff();
