@@ -89,7 +89,6 @@
     </div>
 
     <script>
-        // !! 請將 YOUR_GAS_WEB_APP_URL 替換為您在步驟 2 部署 GAS 後取得的「網路應用程式網址」 !!
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
         
         let LINE_UID = '';
@@ -97,7 +96,7 @@
         let CURRENT_EVENT_ID = null; 
         let ALL_EVENTS = []; 
 
-        // --- 初始化 LIFF (不變) ---
+        // --- 初始化 LIFF ---
         function initializeLiff() {
             liff.init({ liffId: '2008678090-b1Up4o0J' }) 
                 .then(() => {
@@ -135,7 +134,7 @@
                 });
         }
         
-        // --- 載入活動列表 (修改渲染方式) ---
+        // --- 載入活動列表 ---
         async function loadEventsList() {
             try {
                 const url = `${GAS_WEB_APP_URL}?action=getEventsList`;
@@ -153,81 +152,4 @@
                     // 產生參加人數下拉選單 (只需產生一次)
                     const select = document.getElementById('attendees-count');
                     if (select.options.length === 0) {
-                        for (let i = 1; i <= 10; i++) {
-                            const option = document.createElement('option');
-                            option.value = i;
-                            option.textContent = i;
-                            select.appendChild(option);
-                        }
-                    }
-
-                } else {
-                    displaySelectMessage('error', '載入活動列表失敗: ' + result.message);
-                }
-            } catch (error) {
-                console.error("Fetch events list error:", error);
-                displaySelectMessage('error', '連線錯誤，無法載入活動列表。');
-            } finally {
-                document.getElementById('loading-spinner').style.display = 'none';
-            }
-        }
-        
-        // --- 新增：渲染活動下拉選單 ---
-        function renderEventDropdown(events) {
-            const select = document.getElementById('event-select');
-            select.innerHTML = '<option value="">-- 請選擇一項活動 --</option>'; // 重置選單
-            
-            if (events.length === 0) {
-                displaySelectMessage('error', '目前沒有開放報名的活動。');
-                return;
-            }
-            
-            events.forEach(event => {
-                const option = document.createElement('option');
-                option.value = event.EventID;
-                option.textContent = `${event.Title} (${event.Time})`;
-                select.appendChild(option);
-            });
-        }
-        
-        // --- 選擇活動，顯示表單 (透過下拉選單的 onchange 觸發) ---
-        function selectEvent(eventId) {
-            // 如果選擇了預設的空值，就隱藏表單
-            if (!eventId) {
-                hideFormAndStats();
-                return;
-            }
-            
-            CURRENT_EVENT_ID = eventId;
-            const event = ALL_EVENTS.find(e => e.EventID === eventId);
-            
-            if (!event) {
-                alert('活動 ID 錯誤，請重新選擇。');
-                hideFormAndStats();
-                return;
-            }
-            
-            // 填充單一活動資訊
-            document.getElementById('info-title').textContent = event.Title || 'N/A';
-            document.getElementById('info-organizer').textContent = event.Organizer || 'N/A';
-            document.getElementById('info-time').textContent = event.Time || 'N/A';
-            document.getElementById('info-location').textContent = event.Location || 'N/A';
-            document.getElementById('info-map-link').href = event.MapUrl || '#';
-            
-            // 顯示表單和統計區塊
-            document.getElementById('activity-info').style.display = 'block';
-            document.getElementById('registration-form').style.display = 'block';
-            document.getElementById('statistics').style.display = 'block';
-            
-            // 載入特定活動的統計和用戶狀態
-            loadStatsAndStatus(CURRENT_EVENT_ID);
-        }
-
-        // --- 隱藏表單和統計區塊 (用於切換活動或選擇空值時) ---
-        function hideFormAndStats() {
-            CURRENT_EVENT_ID = null;
-            document.getElementById('activity-info').style.display = 'none';
-            document.getElementById('registration-form').style.display = 'none';
-            document.getElementById('statistics').style.display = 'none';
-            hideMessage();
-        }
+                        for (let i = 1; i <=
