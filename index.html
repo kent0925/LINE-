@@ -1,221 +1,264 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>各項活動報名表單</title>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    
-    <style>
-        /* 現代柔和配色方案 */
-        :root {
-            --primary-color: #00796b; 
-            --secondary-color: #4db6ac; 
-            --bg-color: #f0f8ff; 
-            --box-bg-color: #f7f7f7; 
-            --success-color: #4caf50; 
-            --warning-color: #ff9800; 
-            --danger-color: #e53935; 
-            --stat-color: #00897b; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>各項活動報名表單</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-        body { 
-            font-family: "Microsoft JhengHei", sans-serif; 
-            background-color: var(--bg-color); 
-            padding: 20px; 
-        }
-        
-        .container { 
-            max-width: 500px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1); 
-        }
-
-        h2 { 
-            text-align: center; 
-            color: var(--primary-color); 
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-bottom: 25px;
-        }
-        
-        .info-box { 
-            background: var(--box-bg-color); 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-            border-left: 5px solid var(--secondary-color); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        /* 統計區塊樣式調整 */
-        .statistics-box {
-            background-color: #e0f2f1; 
-            border: 1px solid var(--stat-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 30px; 
-        }
-        .statistics-box h3 {
-            color: var(--stat-color);
-            margin-top: 0;
-            margin-bottom: 10px;
-            border-bottom: 2px solid var(--stat-color);
-            padding-bottom: 5px;
-            font-size: 1.1em;
-        }
-        .stat-item {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        #nameList {
-            margin-top: 10px;
-            font-size: 0.95em;
-            line-height: 1.6;
-            color: #444;
-            white-space: pre-wrap; 
-        }
-        
-        label { 
-            display: block; 
-            margin-top: 15px; 
-            font-weight: bold; 
-            color: #555;
-        }
-
-        input, select, textarea { 
-            width: 100%; 
-            padding: 10px; 
-            margin-top: 5px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            box-sizing: border-box;
-            transition: border-color 0.3s; 
-        }
-        
-        .hidden { 
-            display: none !important; 
-        }
-
-        #mapLinkBox a {
-            color: var(--primary-color) !important; 
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .btn-group { 
-            margin-top: 30px; 
-            display: flex; 
-            gap: 15px; 
-        }
-        button { 
-            flex: 1; 
-            padding: 12px; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            color: white; 
-            font-weight: bold;
-            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-        }
-        
-        #signupBtn { 
-            background-color: var(--success-color); 
-        } 
-        #updateBtn { 
-            background-color: var(--warning-color); 
-        } 
-        #cancelBtn { 
-            background-color: var(--danger-color); 
-        } 
-        
-        button:hover:not(:disabled) {
-            transform: translateY(-2px); 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-
-        button:disabled { 
-            background-color: #b0bec5; 
-            cursor: not-allowed; 
-            box-shadow: none;
-            transform: none;
-        }
-    </style>
+<style>
+:root {
+    --primary-color: #00796b;
+    --secondary-color: #4db6ac;
+    --bg-color: #f0f8ff;
+    --box-bg-color: #f7f7f7;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #e53935;
+    --stat-color: #00897b;
+}
+body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); padding: 20px; }
+.container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+h2 { text-align: center; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 10px; margin-bottom: 25px; }
+.info-box { background: var(--box-bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--secondary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.statistics-box { background-color: #e0f2f1; border: 1px solid var(--stat-color); padding: 15px; border-radius: 8px; margin-top: 30px; }
+.statistics-box h3 { color: var(--stat-color); margin-top: 0; margin-bottom: 10px; border-bottom: 2px solid var(--stat-color); padding-bottom: 5px; font-size: 1.1em; }
+.stat-item { font-weight: bold; color: #333; margin-bottom: 5px; }
+#nameList { margin-top: 10px; font-size: 0.95em; line-height: 1.6; color: #444; white-space: pre-wrap; }
+label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; transition: border-color 0.3s; }
+.hidden { display: none !important; }
+#mapLinkBox a { color: var(--primary-color) !important; text-decoration: none; font-weight: bold; }
+.btn-group { margin-top: 30px; display: flex; gap: 15px; }
+button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; color: white; font-weight: bold; transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+#signupBtn { background-color: var(--success-color); }
+#updateBtn { background-color: var(--warning-color); }
+#cancelBtn { background-color: var(--danger-color); }
+button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+button:disabled { background-color: #b0bec5; cursor: not-allowed; box-shadow: none; transform: none; }
+</style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="pageTitle">活動報名表單</h2>
-    
-    <div id="event-selection-area" class="info-box" style="padding: 15px; background: #fff;">
-        <label for="event-select" style="margin-top: 0;">請選擇活動</label>
-        <select id="event-select" onchange="handleEventSelection()">
-            <option value="" disabled selected>-- 請選擇一個活動 --</option>
-        </select>
-        <div id="loading" style="margin-top: 10px; color: #666;">正在載入活動資訊...</div>
-    </div>
-    
-    <div id="event-details-box" class="info-box hidden">
-        <div class="info-item"><span class="info-label">主旨：</span> <span id="eventTitle">...</span></div>
-        <div class="info-item"><span class="info-label">主辦：</span> <span id="organizer">...</span></div>
-        <div class="info-item"><span class="info-label">時間：</span> <span id="time">...</span></div>
-        <div class="info-item"><span class="info-label">地點：</span> <span id="location">...</span></div>
-        <div class="info-item"><span class="info-label">地址：</span> <span id="address">...</span></div>
-        <div class="info-item" id="mapLinkBox"></div>
-    </div>
-    
-    <form id="mainForm" class="hidden">
-        <input type="hidden" id="lineUserId">
-        <input type="hidden" id="eventID"> 
+<h2 id="pageTitle">活動報名表單</h2>
 
-        <label>參加人姓名 (LINE)</label>
-        <input type="text" id="lineName" readonly placeholder="讀取中...">
+<div id="event-selection-area" class="info-box" style="padding: 15px; background: #fff;">
+<label for="event-select" style="margin-top: 0;">請選擇活動</label>
+<select id="event-select" onchange="handleEventSelection()">
+    <option value="" disabled selected>-- 請選擇一個活動 --</option>
+</select>
+<div id="loading" style="margin-top: 10px; color: #666;">正在載入活動資訊...</div>
+</div>
 
-        <label>參加人數 (含本人及來賓)</label>
-        <select id="count">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-        </select>
+<div id="event-details-box" class="info-box hidden">
+<div class="info-item"><span class="info-label">主旨：</span> <span id="eventTitle">...</span></div>
+<div class="info-item"><span class="info-label">主辦：</span> <span id="organizer">...</span></div>
+<div class="info-item"><span class="info-label">時間：</span> <span id="time">...</span></div>
+<div class="info-item"><span class="info-label">地點：</span> <span id="location">...</span></div>
+<div class="info-item"><span class="info-label">地址：</span> <span id="address">...</span></div>
+<div class="info-item" id="mapLinkBox"></div>
+</div>
 
-        <label>來賓姓名</label>
-        <textarea id="guests" rows="3" placeholder="例如：王小明, 李大華"></textarea>
+<form id="mainForm" class="hidden">
+<input type="hidden" id="lineUserId">
+<input type="hidden" id="eventID"> 
+<label>參加人姓名 (LINE)</label>
+<input type="text" id="lineName" readonly placeholder="讀取中...">
+<label>參加人數 (含本人及來賓)</label>
+<select id="count">
+    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+    <option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+</select>
+<label>來賓姓名</label>
+<textarea id="guests" rows="3" placeholder="例如：王小明, 李大華"></textarea>
 
-        <div class="btn-group">
-            <button type="button" id="signupBtn" class="hidden" onclick="handleSubmit('signup')">確認報名</button>
-            <button type="button" id="updateBtn" class="hidden" onclick="handleSubmit('update')">編輯報名</button>
-            <button type="button" id="cancelBtn" class="hidden" onclick="handleSubmit('cancel')">取消報名</button>
-        </div>
-    </form>
+<div class="btn-group">
+<button type="button" id="signupBtn" class="hidden" onclick="handleSubmit('signup')">確認報名</button>
+<button type="button" id="updateBtn" class="hidden" onclick="handleSubmit('update')">修改資料</button>
+<button type="button" id="cancelBtn" class="hidden" onclick="handleSubmit('cancel')">取消報名</button>
+</div>
+</form>
 
-    <div id="statistics-box" class="statistics-box hidden">
-        <h3>📊 即時報名狀況</h3>
-        <div class="stat-item">報名筆數 (LINE ID)： <span id="statSignupCount">0</span> 筆</div>
-        <div class="stat-item">總參加人數： <span id="statTotalCount">0</span> 人</div>
-        
-        <h4>已報名者名單 (LINE 暱稱)：</h4>
-        <div id="nameList">載入中...</div>
-    </div>
+<div id="statistics-box" class="statistics-box hidden">
+<h3>📊 即時報名狀況</h3>
+<div class="stat-item">報名筆數 (LINE ID)： <span id="statSignupCount">0</span> 筆</div>
+<div class="stat-item">總參加人數： <span id="statTotalCount">0</span> 人</div>
+<h4>已報名者名單 (LINE 暱稱)：</h4>
+<div id="nameList">載入中...</div>
+</div>
 
 </div>
 
 <script>
-    // ================= 設定區 (請務必檢查和替換!) =================
-    const LIFF_ID = "2008678090-b1Up4o0J"; 
-    // 請替換成您的 Google Apps Script 部署 URL
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzvve6noaM6oMKHwHfFazP7iVwWVWAY17Reyt3v-kt9yRHPR8diuFgY5xa0bjbN4OblOA/exec"; 
-    // =========================================
+const LIFF_ID = "2008678090-b1Up4o0J"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzvve6noaM6oMKHwHfFazP7iVwWVWAY17Reyt3v-kt9yRHPR8diuFgY5xa0bjbN4OblOA/exec"; 
 
-    let ALL_EVENTS = []; 
-    let USER_SIGNUP_DATA = {}; 
-    let ALL_EVENT_STATS = null; 
-    
-    // 定義有效的報名狀態 (用於前端判斷是否已報名)
-    const SIGNUP_STATUSES = ['SIGNUP', 'UPDATE'];
+let ALL_EVENTS = [];
+let USER_SIGNUP_DATA = {};
+let ALL_EVENT_STATS = null;
+const SIGNUP_STATUSES = ['SIGNUP','UPDATE'];
 
-    window.onload = async function() {
-        await init
+window.onload = async function() {
+    await initLIFF();
+};
+
+async function initLIFF() {
+    try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            const userName = profile.displayName;
+            const userId = profile.userId; 
+            document.getElementById('lineName').value = userName;
+            document.getElementById('lineUserId').value = userId; 
+            document.getElementById('pageTitle').innerText = '活動報名表單 - ' + userName;
+            await fetchData(userId); 
+        } else { liff.login(); }
+    } catch (err) { alert('LIFF 初始化失敗: ' + err.message); }
+}
+
+async function fetchData(userId) { 
+    try {
+        document.getElementById('loading').innerText = '正在讀取活動資料...';
+        const url = `${GAS_URL}?u=${encodeURIComponent(userId)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        document.getElementById('loading').classList.add('hidden');
+
+        if(data.status==='error'){ alert("後端設定錯誤：" + data.message); return; }
+
+        ALL_EVENTS = data.eventList || [];
+        ALL_EVENT_STATS = data.eventStats;
+        USER_SIGNUP_DATA = data.userData && typeof data.userData==='object' ? data.userData : {};
+
+        if(ALL_EVENTS.length===0){
+            document.getElementById('event-selection-area').innerHTML = '<div style="color:red; font-weight:bold;">目前沒有開放報名的活動！</div>';
+            return;
+        }
+
+        populateEventSelect(ALL_EVENTS);
+
+        let selectedEventId = ALL_EVENTS[0].EventID;
+        if(selectedEventId){ document.getElementById('event-select').value = selectedEventId; }
+        handleEventSelection();
+
+    } catch(err){ console.error(err); alert("讀取活動或報名資料失敗，請檢查網路或後端設定。"); }
+}
+
+function populateEventSelect(events){
+    const select = document.getElementById('event-select');
+    select.innerHTML = '<option value="" disabled selected>-- 請選擇一個活動 --</option>';
+    events.forEach(event=>{
+        let optionText = `${event.Title} (${event.Time})`;
+        const userStatus = USER_SIGNUP_DATA[event.EventID] ? String(USER_SIGNUP_DATA[event.EventID].status).toUpperCase() : 'NONE';
+        if(SIGNUP_STATUSES.includes(userStatus)){ optionText += ' (已報名)'; }
+        else if(userStatus==='CANCEL'){ optionText += ' (已取消)'; }
+        select.innerHTML += `<option value="${event.EventID}">${optionText}</option>`;
+    });
+}
+
+function handleEventSelection(){
+    const select = document.getElementById('event-select');
+    const eventId = select.value;
+    const form = document.getElementById('mainForm');
+    const detailsBox = document.getElementById('event-details-box');
+    const statsBox = document.getElementById('statistics-box');
+
+    if(!eventId){ form.classList.add('hidden'); detailsBox.classList.add('hidden'); statsBox.classList.add('hidden'); return; }
+
+    document.getElementById('eventID').value = eventId;
+    const selectedEvent = ALL_EVENTS.find(e=>e.EventID===eventId);
+    const currentUserSignup = USER_SIGNUP_DATA[eventId];
+    let userStatus = currentUserSignup && currentUserSignup.status ? String(currentUserSignup.status).toUpperCase() : 'NONE';
+    console.log("選中活動 ID:", eventId);
+    console.log("使用者報名資料:", currentUserSignup);
+
+    if(selectedEvent){
+        displayEventDetails(selectedEvent);
+        detailsBox.classList.remove('hidden');
+        updateStatisticsDisplay(eventId);
+
+        if(SIGNUP_STATUSES.includes(userStatus)){
+            document.getElementById('count').value = currentUserSignup.count;
+            document.getElementById('guests').value = currentUserSignup.guests;
+            showButtons('edit');
+        } else if(userStatus==='CANCEL'){
+            document.getElementById('count').value='1';
+            document.getElementById('guests').value='';
+            showButtons('new');
+            alert("您目前對此活動的狀態為【已取消】，如欲參加請按【確認報名】重新報名。");
+        } else{
+            document.getElementById('count').value='1';
+            document.getElementById('guests').value='';
+            showButtons('new');
+        }
+        form.classList.remove('hidden');
+    } else{
+        form.classList.add('hidden'); detailsBox.classList.add('hidden'); statsBox.classList.add('hidden');
+    }
+}
+
+function displayEventDetails(data){
+    document.getElementById('eventTitle').innerText = data.Title || "活動";
+    document.getElementById('organizer').innerText = data.Organizer || "";
+    document.getElementById('time').innerText = data.Time;
+    document.getElementById('location').innerText = data.Location || "";
+    document.getElementById('address').innerText = data.Address || "";
+    document.getElementById('mapLinkBox').innerHTML = data.GmapLink ? `<a href="${data.GmapLink}" target="_blank">📍 開啟地圖</a>` : '';
+}
+
+function updateStatisticsDisplay(eventId){
+    const statsBox = document.getElementById('statistics-box');
+    const currentStats = ALL_EVENT_STATS ? ALL_EVENT_STATS[eventId] : null;
+    statsBox.classList.remove('hidden');
+    if(currentStats){
+        document.getElementById('statSignupCount').innerText = currentStats.signupCount;
+        document.getElementById('statTotalCount').innerText = currentStats.totalCount;
+        let nameListHtml = currentStats.nameList.map((name,index)=>(index>0 && index%5===0?`\n${name}`:name)).join('、');
+        document.getElementById('nameList').innerText = nameListHtml||"目前尚無報名者。";
+    } else{
+        document.getElementById('statSignupCount').innerText=0;
+        document.getElementById('statTotalCount').innerText=0;
+        document.getElementById('nameList').innerText="目前尚無報名者。";
+    }
+}
+
+function showButtons(mode){
+    const signupBtn=document.getElementById('signupBtn');
+    const updateBtn=document.getElementById('updateBtn');
+    const cancelBtn=document.getElementById('cancelBtn');
+    if(mode==='edit'){ signupBtn.classList.add('hidden'); updateBtn.classList.remove('hidden'); cancelBtn.classList.remove('hidden'); }
+    else{ signupBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelBtn.classList.add('hidden'); }
+}
+
+async function handleSubmit(action){
+    if(action==='cancel' && !confirm("確定要取消報名嗎？此操作將取消您目前的有效報名紀錄。")) return;
+    const btnId=action==='signup'?'signupBtn':(action==='update'?'updateBtn':'cancelBtn');
+    const btn=document.getElementById(btnId);
+    const originalText=btn.innerText;
+    btn.disabled=true; btn.innerText="處理中...";
+
+    const formData={
+        action:action,
+        lineUserId:document.getElementById('lineUserId').value,
+        lineName:document.getElementById('lineName').value,
+        eventId:document.getElementById('eventID').value,
+        count:document.getElementById('count').value,
+        guests:document.getElementById('guests').value
+    };
+
+    if(!formData.eventId){ alert("請先選擇一個活動！"); btn.disabled=false; btn.innerText=originalText; return; }
+    if((action==='signup'||action==='update') && (parseInt(formData.count)<=0||!formData.count)){ alert("參加人數至少為 1 人 (含本人)！"); btn.disabled=false; btn.innerText=originalText; return; }
+
+    try{
+        await fetch(GAS_URL,{method:'POST',body:JSON.stringify(formData),mode:'no-cors',headers:{'Content-Type':'text/plain'}});
+        alert(action==='cancel'?'✅ 已成功取消報名！':'✅ 資料已成功送出！');
+        setTimeout(()=>{ if(liff.isInClient()){ liff.closeWindow(); } },500);
+    }catch(err){ console.error(err); alert('❌ 發生錯誤，請重試！' + (err.message||"")); btn.disabled=false; btn.innerText=originalText; }
+}
+</script>
+
+</body>
+</html>
