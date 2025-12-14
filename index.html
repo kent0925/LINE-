@@ -27,6 +27,7 @@ input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5
 .stats-list { list-style: none; padding-left: 0; max-height: 150px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 4px; }
 .stats-list li { padding: 5px 0; border-bottom: 1px dotted #eee; }
 .stats-list li:last-child { border-bottom: none; }
+#form-actions { display: flex; justify-content: space-around; }
 .loading { text-align: center; padding: 30px; }
 </style>
 </head>
@@ -67,7 +68,11 @@ input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5
 <textarea id="guest-names" rows="2" placeholder="例如：王小明, 陳小美"></textarea>
 
 <div class="btn-group">
-    <div id="form-actions"></div>
+    <div id="form-actions">
+        <button class="btn btn-register" onclick="submitRegistration('register')">報名</button>
+        <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
+        <button class="btn btn-modify" onclick="submitRegistration('edit')">編輯報名</button>
+    </div>
 </div>
 
 <div id="form-message" class="message"></div>
@@ -89,15 +94,15 @@ let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 async function initializeLiff(){
     liff.init({liffId:'2008678090-aXTesgDK'})
     .then(()=>{
-        if(!liff.isLoggedIn()){liff.login(); return;}
+        if(!liff.isLoggedIn()){ liff.login(); return; }
         liff.getProfile().then(profile=>{
-            LINE_UID=profile.userId;
-            LINE_NICKNAME=profile.displayName;
-            document.getElementById('line-nickname').textContent=LINE_NICKNAME;
-            document.getElementById('line-uid').value=LINE_UID;
+            LINE_UID = profile.userId;
+            LINE_NICKNAME = profile.displayName;
+            document.getElementById('line-nickname').textContent = LINE_NICKNAME;
+            document.getElementById('line-uid').value = LINE_UID;
             loadEventsList();
-        }).catch(err=>{console.error(err); alert('取得個人資料失敗');});
-    }).catch(err=>{console.error(err); alert('LIFF初始化失敗');});
+        }).catch(err=>{ console.error(err); alert('取得個人資料失敗'); });
+    }).catch(err=>{ console.error(err); alert('LIFF初始化失敗'); });
 }
 
 async function loadEventsList(){
@@ -108,7 +113,8 @@ async function loadEventsList(){
         const sel=document.getElementById('event-select');
         sel.innerHTML=`<option value="">-- 請選擇一項活動 --</option>`;
         ALL_EVENTS.forEach(ev=>{
-            let label=`${ev.Title} (${ev.Time})`;
+            let eventTime = formatLocalTime(ev.Time);
+            let label=`${ev.Title} (${eventTime})`;
             if(ev.UserRegistered) label+=' [已報名]';
             sel.innerHTML+=`<option value="${ev.EventID}">${label}</option>`;
         });
@@ -120,70 +126,65 @@ async function loadEventsList(){
     }
 }
 
+// ISO 字串轉本地時間格式 yyyy/MM/dd HH:mm
+function formatLocalTime(isoString){
+    if(!isoString) return '';
+    const d = new Date(isoString);
+    return `${d.getFullYear()}/${('0'+(d.getMonth()+1)).slice(-2)}/${('0'+d.getDate()).slice(-2)} ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`;
+}
+
 function selectEvent(eventId){
     if(!eventId) return;
-    CURRENT_EVENT_ID=eventId;
-    const ev=ALL_EVENTS.find(e=>e.EventID===eventId);
+    CURRENT_EVENT_ID = eventId;
+    const ev = ALL_EVENTS.find(e => e.EventID === eventId);
     document.getElementById('activity-info').style.display='block';
-    document.getElementById('info-title').textContent=ev.Title;
-    document.getElementById('info-organizer').textContent=ev.Organizer;
-    document.getElementById('info-time').textContent=ev.Time;
-    document.getElementById('info-location').textContent=ev.Address;
-    document.getElementById('info-map-link').href=ev.MapUrl;
+    document.getElementById('info-title').textContent = ev.Title;
+    document.getElementById('info-organizer').textContent = ev.Organizer;
+    document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
+    document.getElementById('info-location').textContent = ev.Address;
+    document.getElementById('info-map-link').href = ev.MapUrl;
     document.getElementById('registration-form').style.display='block';
     loadStatsAndStatus(eventId);
 }
 
 async function loadStatsAndStatus(eventId, force=false){
     if(!eventId) return;
-    const res=await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-    const data=await res.json();
+    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+    const data = await res.json();
     if(data.status==='success'){
-        document.getElementById('total-attendees').textContent=data.totalAttendees;
+        document.getElementById('total-attendees').textContent = data.totalAttendees;
         const ul=document.getElementById('registered-list');
         ul.innerHTML='';
-        data.registeredUsers.forEach(u=>ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
-
-        const attendeesCountEl = document.getElementById('attendees-count');
-        const guestNamesEl = document.getElementById('guest-names');
-        const actionsEl = document.getElementById('form-actions');
-        attendeesCountEl.value = 1;
-        guestNamesEl.value = '';
-        actionsEl.innerHTML = '';
-
-        if(data.userStatus && data.userStatus.Status === 'Registered'){
-            attendeesCountEl.value = data.userStatus.Attendees_Count||1;
-            guestNamesEl.value = data.userStatus.Guest_Names||'';
-            // 已報名 → 顯示取消與修改
-            actionsEl.innerHTML = `
-                <button class="btn btn-modify" onclick="submitRegistration('edit')">修改報名</button>
-                <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
-            `;
-        } else {
-            // 未報名 → 顯示報名
-            actionsEl.innerHTML = `<button class="btn btn-register" onclick="submitRegistration('register')">報名</button>`;
+        data.registeredUsers.forEach(u => ul.innerHTML+=`<li>${u.name} (${u.attendees}人)</li>`);
+        if(data.userStatus){
+            document.getElementById('attendees-count').value = data.userStatus.Attendees_Count||1;
+            document.getElementById('guest-names').value = data.userStatus.Guest_Names||'';
         }
-
         document.getElementById('statistics').style.display='block';
     }
 }
 
 async function submitRegistration(action){
     if(!CURRENT_EVENT_ID) return;
-    const payload={
-        action:action,
-        eventId:CURRENT_EVENT_ID,
-        lineUid:LINE_UID,
-        lineNickname:LINE_NICKNAME,
-        attendeesCount:parseInt(document.getElementById('attendees-count').value),
-        guestNames:document.getElementById('guest-names').value
+    const payload = {
+        action: action,
+        eventId: CURRENT_EVENT_ID,
+        lineUid: LINE_UID,
+        lineNickname: LINE_NICKNAME,
+        attendeesCount: parseInt(document.getElementById('attendees-count').value),
+        guestNames: document.getElementById('guest-names').value
     };
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
-    const data=await res.json();
-    const msgEl=document.getElementById('form-message');
+    const res = await fetch(GAS_URL, {method:'POST', body: JSON.stringify(payload)});
+    const data = await res.json();
+    const msgEl = document.getElementById('form-message');
     msgEl.style.display='block';
-    if(data.status==='success'){ msgEl.className='message success'; msgEl.textContent=data.message; }
-    else{ msgEl.className='message error'; msgEl.textContent=data.message; }
+    if(data.status==='success'){
+        msgEl.className='message success'; 
+        msgEl.textContent = data.message;
+    } else {
+        msgEl.className='message error'; 
+        msgEl.textContent = data.message;
+    }
     loadStatsAndStatus(CURRENT_EVENT_ID,true);
     loadEventsList(); // 更新選單上的已報名標示
 }
