@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <title>LIFF 活動報名</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- ✅ 官方正確 LIFF SDK -->
+  <meta charset="UTF-8">
+  <title>LIFF 多活動報名</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <style>
     body { font-family: Arial; background:#f5f5f5; padding:20px }
     .box { background:#fff; padding:20px; max-width:500px; margin:auto; border-radius:8px }
     h2 { color:#00b900 }
     select, textarea, button { width:100%; margin-top:10px; padding:10px }
-    button { background:#00b900; color:#fff; border:0; border-radius:4px }
+    button { color:#fff; border:0; border-radius:4px; cursor:pointer }
+    .register { background:#00b900 }
+    .cancel { background:#ff3b30 }
     .msg { margin-top:10px; font-weight:bold }
+    ul { padding-left:20px }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>活動報名</h2>
-
+  <h2>多活動報名</h2>
   <p>LINE 使用者：<span id="nickname">載入中…</span></p>
 
   <label>選擇活動</label>
-  <select id="eventSelect"></select>
+  <select id="eventSelect" onchange="refreshStats()"></select>
 
   <label>參加人數</label>
   <select id="count">
@@ -33,20 +32,24 @@
     <option value="2">2 人</option>
     <option value="3">3 人</option>
     <option value="4">4 人</option>
-    <option value="5">5 人</option>
-    <option value="6">6 人</option>
-    <option value="7">7 人</option>
-    <option value="8">8 人</option>
-    <option value="9">9 人</option>
-    
   </select>
 
-  <label>同行者姓名</label>
-  <textarea id="guests"></textarea>
+  <label>同行者姓名 (用逗號分隔)</label>
+  <textarea id="guests" placeholder="王小明, 陳小美"></textarea>
 
-  <button onclick="register()">送出報名</button>
+  <button class="register" onclick="register()">送出報名</button>
+  <button class="cancel" onclick="cancelRegistration()">取消報名</button>
 
   <div id="msg" class="msg"></div>
+
+  <div id="stats" style="margin-top:20px; border-top:1px solid #ccc; padding-top:10px;">
+    <h3>活動報名統計</h3>
+    <p>總參加人數：<span id="totalCount">0</span></p>
+    <p>參加者列表：</p>
+    <ul id="userList"></ul>
+    <p id="userStatus"></p>
+    <button onclick="refreshStats()">重新整理統計</button>
+  </div>
 </div>
 
 <script>
@@ -62,10 +65,7 @@ let CURRENT_EVENT = '';
  **************/
 liff.init({ liffId: LIFF_ID })
 .then(() => {
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
+  if (!liff.isLoggedIn()) liff.login();
   return liff.getProfile();
 })
 .then(p => {
@@ -73,10 +73,11 @@ liff.init({ liffId: LIFF_ID })
   LINE_NAME = p.displayName;
   document.getElementById('nickname').textContent = LINE_NAME;
   loadEvents();
-});
+})
+.catch(err => console.error(err));
 
 /**************
- * GET 活動
+ * 取得活動列表
  **************/
 function loadEvents() {
   fetch(GAS_URL + '?action=getEventsList')
@@ -94,20 +95,15 @@ function loadEvents() {
 }
 
 /**************
- * POST（form-urlencoded）
+ * POST (form-urlencoded)
  **************/
 function post(data) {
-  const body = Object.keys(data)
-    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
-    .join('&');
-
+  const body = Object.keys(data).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k])).join('&');
   return fetch(GAS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
+    method:'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
     body
-  }).then(r => r.json());
+  }).then(r=>r.json());
 }
 
 /**************
@@ -115,13 +111,10 @@ function post(data) {
  **************/
 function register() {
   CURRENT_EVENT = document.getElementById('eventSelect').value;
-  if (!CURRENT_EVENT) {
-    show('請選擇活動');
-    return;
-  }
+  if (!CURRENT_EVENT) { show('請選擇活動'); return; }
 
   post({
-    action: 'register',
+    action:'register',
     eventId: CURRENT_EVENT,
     lineUid: LINE_UID,
     lineNickname: LINE_NAME,
@@ -129,16 +122,60 @@ function register() {
     guestNames: document.getElementById('guests').value
   })
   .then(res => {
-    show(res.message || '完成');
+    show(res.message || '報名成功');
+    refreshStats();
   })
-  .catch(() => {
-    show('連線錯誤');
-  });
+  .catch(()=>show('連線錯誤'));
 }
 
-function show(t) {
-  document.getElementById('msg').textContent = t;
+/**************
+ * 取消報名
+ **************/
+function cancelRegistration() {
+  if (!CURRENT_EVENT) { show('請先選擇活動'); return; }
+
+  post({
+    action:'cancel',
+    eventId: CURRENT_EVENT,
+    lineUid: LINE_UID,
+    lineNickname: LINE_NAME
+  })
+  .then(res => {
+    show(res.message || '已取消報名');
+    refreshStats();
+  })
+  .catch(()=>show('連線錯誤'));
 }
+
+/**************
+ * 即時統計
+ **************/
+function refreshStats() {
+  CURRENT_EVENT = document.getElementById('eventSelect').value;
+  if (!CURRENT_EVENT) return;
+
+  fetch(`${GAS_URL}?action=getStatsAndStatus&eventId=${CURRENT_EVENT}&lineUid=${LINE_UID}`)
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status!=='success'){ show(res.message||'取得失敗'); return; }
+
+      document.getElementById('totalCount').textContent = res.totalAttendees;
+      const ul = document.getElementById('userList');
+      ul.innerHTML = '';
+      res.registeredUsers.forEach(n=>{
+        const li = document.createElement('li');
+        li.textContent = n;
+        ul.appendChild(li);
+      });
+
+      document.getElementById('userStatus').textContent = res.userStatus ?
+        `您的狀態：${res.userStatus.Status}，人數：${res.userStatus.Attendees_Count}` :
+        '您尚未報名此活動';
+    })
+    .catch(()=>show('連線錯誤'));
+}
+
+function show(msg){ document.getElementById('msg').textContent = msg; }
 </script>
 
 </body>
