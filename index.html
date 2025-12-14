@@ -6,29 +6,24 @@
 <title>多活動報名表單</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f5f5f5; }
+body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f5f5f5; }
 .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-h1 { color: #00b900; border-bottom: 3px solid #00b900; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+h1 { color: #00b900; border-bottom: 3px solid #00b900; padding-bottom: 10px; text-align: center; }
 .info-card, .form-section, .stats-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
-.info-card h2, .form-section h2 { margin-top: 0; color: #333; }
-label { display: block; margin-top: 10px; font-weight: bold; }
-input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-.btn-group { margin-top: 20px; text-align: center; }
-.btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px; transition: background-color 0.3s; }
-.btn-register { background-color: #00b900; color: white; }
-.btn-register:hover { background-color: #009900; }
-.btn-cancel { background-color: #ff3b30; color: white; }
-.btn-cancel:hover { background-color: #cc0000; }
-.btn-modify { background-color: #007aff; color: white; }
-.btn-modify:hover { background-color: #005bb5; }
-.message { padding: 10px; margin-top: 15px; border-radius: 4px; text-align: center; font-weight: bold; display: none; }
-.success { background-color: #e6ffe6; color: #009900; border: 1px solid #009900; }
-.error { background-color: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
-.stats-list { list-style: none; padding-left: 0; max-height: 150px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 4px; }
-.stats-list li { padding: 5px 0; border-bottom: 1px dotted #eee; }
-.stats-list li:last-child { border-bottom: none; }
-#form-actions { display: flex; justify-content: space-around; }
-.loading { text-align: center; padding: 30px; }
+label { display:block; margin-top:10px; font-weight:bold; }
+input[type="text"], select, textarea { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
+.btn { padding: 10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin:5px; }
+.btn-register { background-color:#00b900; color:white; }
+.btn-cancel { background-color:#ff3b30; color:white; }
+.btn-modify { background-color:#007aff; color:white; }
+.message { padding:10px; margin-top:15px; border-radius:4px; text-align:center; font-weight:bold; display:none; }
+.success { background-color:#e6ffe6; color:#009900; border:1px solid #009900; }
+.error { background-color:#ffe6e6; color:#cc0000; border:1px solid #cc0000; }
+.stats-list { list-style:none; padding-left:0; max-height:150px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:4px; }
+.stats-list li { padding:5px 0; border-bottom:1px dotted #eee; }
+.stats-list li:last-child { border-bottom:none; }
+#form-actions { display:flex; justify-content:space-around; }
+.loading { text-align:center; padding:30px; }
 </style>
 </head>
 <body>
@@ -36,15 +31,13 @@ input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5
 <div class="container">
 <h1>多活動報名表單</h1>
 
-<div id="loading-spinner" class="loading">
-    <p>載入中，請稍候...</p>
-</div>
+<div id="loading-spinner" class="loading"><p>載入中，請稍候...</p></div>
 
 <div id="event-selection" class="form-section" style="display:none;">
 <h2>選擇報名活動</h2>
 <label for="event-select">可報名活動列表</label>
 <select id="event-select" onchange="selectEvent(this.value)">
-    <option value="">-- 請選擇一項活動 --</option>
+  <option value="">-- 請選擇一項活動 --</option>
 </select>
 <div id="select-message" class="message"></div>
 </div>
@@ -61,17 +54,17 @@ input[type="text"], select, textarea { width: 100%; padding: 10px; margin-top: 5
 <p><strong>參加人姓名:</strong> <span id="line-nickname">載入中...</span></p>
 <input type="hidden" id="line-uid">
 
-<label for="attendees-count">參加人數 (含您本人)</label>
+<label for="attendees-count">參加人數 (含本人)</label>
 <select id="attendees-count"></select>
 
-<label for="guest-names">來賓姓名 (請用逗號分隔)</label>
+<label for="guest-names">來賓姓名 (逗號分隔)</label>
 <textarea id="guest-names" rows="2" placeholder="例如：王小明, 陳小美"></textarea>
 
 <div class="btn-group">
-    <div id="form-actions">
-        <button class="btn btn-register" onclick="submitRegistration('register')">報名</button>
-        <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
-    </div>
+  <div id="form-actions">
+    <button class="btn btn-register" onclick="submitRegistration('register')">報名</button>
+    <button class="btn btn-cancel" onclick="submitRegistration('cancel')">取消報名</button>
+  </div>
 </div>
 
 <div id="form-message" class="message"></div>
@@ -105,15 +98,20 @@ async function initializeLiff(){
 }
 
 async function loadEventsList(){
-    const res=await fetch(`${GAS_URL}?action=getEventsList`);
-    const data=await res.json();
+    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+    const data = await res.json();
     if(data.status==='success'){
-        ALL_EVENTS=data.events;
+        ALL_EVENTS = data.events;
         const sel=document.getElementById('event-select');
-        ALL_EVENTS.forEach(ev=>sel.innerHTML+=`<option value="${ev.EventID}">${ev.Title}</option>`);
+        sel.innerHTML=`<option value="">-- 請選擇一項活動 --</option>`;
+        ALL_EVENTS.forEach(ev=>{
+            let label=`${ev.Title} (${ev.Time})`;
+            if(ev.UserRegistered) label+=' [已報名]';
+            sel.innerHTML+=`<option value="${ev.EventID}">${label}</option>`;
+        });
         document.getElementById('event-selection').style.display='block';
-        // 產生參加人數
         const countSel=document.getElementById('attendees-count');
+        countSel.innerHTML='';
         for(let i=1;i<=10;i++) countSel.innerHTML+=`<option value="${i}">${i}</option>`;
         document.getElementById('loading-spinner').style.display='none';
     }
@@ -167,6 +165,7 @@ async function submitRegistration(action){
     if(data.status==='success'){ msgEl.className='message success'; msgEl.textContent=data.message; }
     else{ msgEl.className='message error'; msgEl.textContent=data.message; }
     loadStatsAndStatus(CURRENT_EVENT_ID,true);
+    loadEventsList(); // 更新選單上的已報名標示
 }
 
 initializeLiff();
