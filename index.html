@@ -106,21 +106,32 @@ function formatLocalTime(iso){
 }
 
 async function loadEventsList(){
-  const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-  const data = await res.json();
-  ALL_EVENTS = data.events || [];
-  const sel = document.getElementById('event-select');
-  sel.innerHTML = '<option value="">-- 請選擇一項活動 --</option>';
-  ALL_EVENTS.forEach(ev=>{
-    sel.innerHTML += `<option value="${ev.EventID}" ${ev.UserRegistered?'disabled':''}>
-      ${ev.Title} (${formatLocalTime(ev.Time)})
-    </option>`;
-  });
-  const countSel = document.getElementById('attendees-count');
-  countSel.innerHTML='';
-  for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i}</option>`;}
-  document.getElementById('loading-spinner').style.display='none';
-  document.getElementById('event-selection').style.display='block';
+  try {
+    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+    const data = await res.json();
+    ALL_EVENTS = data.events || [];
+
+    const sel = document.getElementById('event-select');
+    sel.innerHTML = '<option value="">-- 請選擇一項活動 --</option>';
+
+    // ✅ 已報名活動不再被禁用
+    ALL_EVENTS.forEach(ev=>{
+      sel.innerHTML += `<option value="${ev.EventID}">
+        ${ev.Title} (${formatLocalTime(ev.Time)})
+      </option>`;
+    });
+
+    // 生成參加人數選單 1~10
+    const countSel = document.getElementById('attendees-count');
+    countSel.innerHTML='';
+    for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i}</option>`;}
+
+    document.getElementById('loading-spinner').style.display='none';
+    document.getElementById('event-selection').style.display='block';
+  } catch(err){
+    console.error('載入活動列表失敗:', err);
+    alert('載入活動列表失敗，請稍後再試。');
+  }
 }
 
 function selectEvent(eventId){
@@ -139,16 +150,20 @@ function selectEvent(eventId){
 }
 
 async function loadStatsAndStatus(eventId){
-  const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-  const data = await res.json();
-  document.getElementById('total-attendees').textContent = data.totalAttendees || 0;
-  const ul = document.getElementById('registered-list');
-  ul.innerHTML='';
-  (data.registeredUsers||[]).forEach(u=>{
-    ul.innerHTML+=`<li>${u.name} (${u.attendees}人) ${u.guestNames ? '- 來賓: '+u.guestNames : ''}</li>`;
-  });
-  updateButtons(data.userStatus);
-  document.getElementById('statistics').style.display='block';
+  try {
+    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+    const data = await res.json();
+    document.getElementById('total-attendees').textContent = data.totalAttendees || 0;
+    const ul = document.getElementById('registered-list');
+    ul.innerHTML='';
+    (data.registeredUsers||[]).forEach(u=>{
+      ul.innerHTML+=`<li>${u.name} (${u.attendees}人) ${u.guestNames ? '- 來賓: '+u.guestNames : ''}</li>`;
+    });
+    updateButtons(data.userStatus);
+    document.getElementById('statistics').style.display='block';
+  } catch(err){
+    console.error('載入統計資料失敗:', err);
+  }
 }
 
 function updateButtons(userStatus){
@@ -177,14 +192,22 @@ async function submitRegistration(action){
     attendeesCount: parseInt(document.getElementById('attendees-count').value),
     guestNames: document.getElementById('guest-names').value
   };
-  const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
-  const data = await res.json();
-  const msg = document.getElementById('form-message');
-  msg.style.display='block';
-  msg.className = data.status==='success'?'message success':'message error';
-  msg.textContent = data.message;
-  loadStatsAndStatus(CURRENT_EVENT_ID);
-  loadEventsList();
+  try {
+    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const data = await res.json();
+    const msg = document.getElementById('form-message');
+    msg.style.display='block';
+    msg.className = data.status==='success'?'message success':'message error';
+    msg.textContent = data.message;
+    loadStatsAndStatus(CURRENT_EVENT_ID);
+    loadEventsList();
+  } catch(err){
+    console.error('提交報名失敗:', err);
+    const msg = document.getElementById('form-message');
+    msg.style.display='block';
+    msg.className = 'message error';
+    msg.textContent = '提交報名失敗，請稍後再試。';
+  }
 }
 
 initializeLiff();
