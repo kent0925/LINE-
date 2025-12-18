@@ -263,7 +263,7 @@ async function loadEventsList(){
 
     ALL_EVENTS.forEach(ev=>{
       // UX 優化：在列表文字中顯示是否已報名
-      const registeredTag = ev.IsRegistered ? '【✅ 已報名】' : '';
+      const registeredTag = ev.UserRegistered ? '【✅ 已報名】' : '';
       const optionText = `${registeredTag} ${ev.Title} (${formatLocalTime(ev.Time)})`;
       
       const opt = document.createElement('option');
