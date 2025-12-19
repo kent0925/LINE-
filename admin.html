@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主辦者管理後台</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #eef2f3; padding: 20px; }
+    .box { background: white; padding: 20px; border-radius: 15px; max-width: 500px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+    .btn { width: 100%; padding: 12px; background: #06C755; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h2>➕ 建立新活動</h2>
+  <input type="text" id="title" placeholder="活動名稱">
+  <label>活動時間</label><input type="datetime-local" id="time">
+  <label>報名開始</label><input type="datetime-local" id="open">
+  <label>報名截止</label><input type="datetime-local" id="close">
+  <input type="text" id="venue" placeholder="場地名稱">
+  <input type="text" id="address" placeholder="地址">
+  <button class="btn" onclick="create()">發佈活動</button>
+
+  <h2 style="margin-top:30px;">📋 我建立的活動</h2>
+  <div id="list">讀取中...</div>
+</div>
+
+<script>
+const GAS_URL = '你的GAS部署URL';
+const LIFF_ID = '你的管理員LIFF_ID';
+let ADMIN_UID, ADMIN_NAME;
+
+async function init() {
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login(); return; }
+  const p = await liff.getProfile();
+  ADMIN_UID = p.userId; ADMIN_NAME = p.displayName;
+  loadMyEvents();
+}
+
+async function create() {
+  const payload = {
+    action: 'createEvent', adminUid: ADMIN_UID, adminNickname: ADMIN_NAME,
+    title: document.getElementById('title').value,
+    time: document.getElementById('time').value,
+    openTime: document.getElementById('open').value,
+    closeTime: document.getElementById('close').value,
+    venueName: document.getElementById('venue').value,
+    address: document.getElementById('address').value
+  };
+  await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+  alert('建立成功'); location.reload();
+}
+
+async function loadMyEvents() {
+  const res = await fetch(`${GAS_URL}?action=getMyEvents&adminUid=${ADMIN_UID}`);
+  const data = await res.json();
+  const div = document.getElementById('list');
+  div.innerHTML = '';
+  data.events.forEach(e => {
+    div.innerHTML += `
+      <div class="item">
+        <div><b>${e.Title}</b><br><small>${new Date(e.Time).toLocaleDateString()}</small></div>
+        <button onclick="del('${e.EventID}')" style="color:red; border:none; background:none; cursor:pointer;">🗑️ 刪除</button>
+      </div>`;
+  });
+}
+
+async function del(id) {
+  if(!confirm('確定刪除？')) return;
+  await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', eventId: id, adminUid: ADMIN_UID }) });
+  loadMyEvents();
+}
+
+init();
+</script>
+</body>
+</html>
