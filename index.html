@@ -276,6 +276,7 @@ function formatLocalTime(iso){
 
 async function loadEventsList(){
   try {
+    // 優化：這裡一次性拿回所有資料（包括統計和個人狀態）
     const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
     const data = await res.json();
     ALL_EVENTS = data.events || [];
@@ -310,6 +311,7 @@ function selectEvent(eventId){
   
   document.getElementById('activity-info').style.display='block';
   document.getElementById('registration-form').style.display='block';
+  document.getElementById('statistics').style.display='block'; // 直接顯示統計區
   
   // 填充基本資訊
   document.getElementById('info-title').textContent = ev.Title;
@@ -319,19 +321,23 @@ function selectEvent(eventId){
   document.getElementById('info-location').textContent = ev.Address;
   document.getElementById('info-map-link').href = ev.MapUrl;
 
+  // 更新統計數據 (資料已在 ALL_EVENTS 內)
+  document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
+  
+  // 更新報名狀態按鈕
+  updateButtons(ev.UserStatus);
+
   // ⭐ 時間與來源邏輯判斷
-  const isSystemEvent = !ev.CreatorUID; // 若 CreatorUID 為空，則視為手動建立
+  const isSystemEvent = !ev.CreatorUID; 
   const deadlineBox = document.getElementById('deadline-container');
   const tag = document.getElementById('time-status-tag');
   const regBtn = document.getElementById('btn-register');
 
   if (isSystemEvent) {
-    // 手動建立活動：隱藏截止時間與狀態標籤，預設允許報名
     deadlineBox.style.display = 'none';
     tag.style.display = 'none';
     regBtn.disabled = false;
   } else {
-    // 網頁建立活動：顯示截止時間，判斷是否過期
     deadlineBox.style.display = 'block';
     tag.style.display = 'inline-block';
     document.getElementById('info-close-time').textContent = formatLocalTime(ev.CloseTime);
@@ -355,24 +361,23 @@ function selectEvent(eventId){
     }
   }
 
-  loadStatsAndStatus(eventId);
+  // 若需要詳細名單，仍可選擇非同步讀取，但基礎人數已秒出
+  loadStatsList(eventId); 
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
-async function loadStatsAndStatus(eventId){
+// 僅用於載入詳細名單列表，不影響按鈕顯示速度
+async function loadStatsList(eventId){
   try {
     const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
     const data = await res.json();
-    document.getElementById('total-attendees').textContent = data.totalAttendees || 0;
     const ul = document.getElementById('registered-list');
     ul.innerHTML='';
     (data.registeredUsers||[]).forEach(u=>{
       ul.innerHTML+=`<li><span>${u.name}</span> <span>${u.attendees}人</span></li>`;
     });
-    updateButtons(data.userStatus);
-    document.getElementById('statistics').style.display='block';
   } catch(err){
-    console.error('載入統計失敗:', err);
+    console.error('載入名單失敗:', err);
   }
 }
 
@@ -380,7 +385,6 @@ function updateButtons(userStatus){
   const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
   const now = new Date().getTime();
   
-  // 基礎報名時間判斷
   let canRegister = true;
   if(ev && ev.CreatorUID){
       const open = new Date(ev.OpenTime).getTime();
@@ -430,8 +434,12 @@ async function submitRegistration(action){
         msg.textContent += ' 視窗即將關閉...';
         setTimeout(() => { liff.closeWindow(); }, 2000);
       } else {
-        loadStatsAndStatus(CURRENT_EVENT_ID);
-        loadEventsList();
+        // 更新當前活動狀態後重新載入列表
+        loadEventsList().then(() => {
+            const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
+            if(ev) updateButtons(ev.UserStatus);
+        });
+        loadStatsList(CURRENT_EVENT_ID);
       }
     }
   } catch(err){
