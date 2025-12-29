@@ -76,6 +76,62 @@ h2::before {
   border-radius: 10px;
 }
 
+/* --- 新增：活動按鈕選單樣式 --- */
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.event-card {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 15px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 70px;
+}
+
+.event-card.selected {
+  border-color: var(--line-green);
+  background-color: #f0fff4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 199, 85, 0.1);
+}
+
+.event-card .reg-badge {
+  position: absolute;
+  top: -8px;
+  right: -5px;
+  background: var(--line-green);
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.event-card .event-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.event-card .event-date {
+  font-size: 0.75rem;
+  color: #718096;
+}
+/* --------------------------- */
+
 label {
   display: block; 
   margin: 15px 0 6px 4px; 
@@ -118,8 +174,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 .btn:active { transform: scale(0.96); }
-.btn:disabled { background: #cbd5e0; color: #718096; cursor: not-allowed; }
-
 .btn-register { background: var(--line-green); color: white; }
 .btn-cancel { background: #fee2e2; color: var(--accent-red); }
 .btn-edit { background: #e0f2fe; color: var(--accent-blue); }
@@ -159,12 +213,6 @@ input:focus, select:focus, textarea:focus {
   border-radius: 12px; 
   text-align: center; 
   font-weight: 600;
-  animation: slideUp 0.4s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .success { background-color: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
@@ -172,12 +220,9 @@ input:focus, select:focus, textarea:focus {
 
 .loading { text-align: center; padding: 60px 20px; }
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
+  width: 40px; height: 40px; border: 4px solid #f3f3f3;
   border-top: 4px solid var(--line-green);
-  border-radius: 50%;
-  margin: 0 auto 15px;
+  border-radius: 50%; margin: 0 auto 15px;
   animation: spin 1s linear infinite;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -194,11 +239,9 @@ input:focus, select:focus, textarea:focus {
   </div>
 
   <div id="event-selection" class="form-section" style="display:none;">
-    <h2>選擇活動</h2>
-    <label for="event-select">可供預約的場次</label>
-    <select id="event-select" onchange="selectEvent(this.value)">
-      <option value="">-- 請點擊選擇活動 --</option>
-    </select>
+    <h2>選擇活動場次</h2>
+    <div id="event-button-container" class="event-grid">
+      </div>
   </div>
 
   <div id="activity-info" class="info-card" style="display:none;">
@@ -254,7 +297,6 @@ let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
 async function initializeLiff(){
   try {
-    // 預先生成人數選單
     const countSel = document.getElementById('attendees-count');
     countSel.innerHTML='';
     for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i} 人</option>`;}
@@ -279,22 +321,32 @@ function formatLocalTime(iso){
   return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+// 修改點：動態生成活動卡片按鈕
 async function loadEventsList(){
   try {
     const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
     const data = await res.json();
     ALL_EVENTS = data.events || [];
 
-    const sel = document.getElementById('event-select');
-    sel.innerHTML = '<option value="">-- 請點擊選擇活動 --</option>';
+    const container = document.getElementById('event-button-container');
+    container.innerHTML = '';
 
-    ALL_EVENTS.forEach(ev=>{
-      const registeredTag = ev.IsRegistered ? '【✅ 已報名】' : '';
-      const optionText = `${registeredTag} ${ev.Title} (${formatLocalTime(ev.Time)})`;
-      const opt = document.createElement('option');
-      opt.value = ev.EventID;
-      opt.textContent = optionText;
-      sel.appendChild(opt);
+    ALL_EVENTS.forEach(ev => {
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      
+      let html = '';
+      if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
+      html += `<span class="event-title">${ev.Title}</span>`;
+      html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+      
+      card.innerHTML = html;
+      card.onclick = function() {
+        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
+        this.classList.add('selected');
+        selectEvent(ev.EventID);
+      };
+      container.appendChild(card);
     });
 
     document.getElementById('loading-spinner').style.display='none';
@@ -306,33 +358,23 @@ async function loadEventsList(){
 
 function selectEvent(eventId){
   const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
-  if(!ev) {
-    document.getElementById('activity-info').style.display='none';
-    document.getElementById('registration-form').style.display='none';
-    document.getElementById('statistics').style.display='none';
-    return;
-  }
+  if(!ev) return;
   CURRENT_EVENT_ID = eventId;
   
   document.getElementById('activity-info').style.display='block';
   document.getElementById('registration-form').style.display='block';
   document.getElementById('statistics').style.display='block';
   
-  // 填充基本資訊
   document.getElementById('info-title').textContent = ev.Title;
   document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
   document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
   document.getElementById('info-venue-name').textContent = ev.VenueName;
   document.getElementById('info-location').textContent = ev.Address;
   document.getElementById('info-map-link').href = ev.MapUrl || '#';
-
-  // 🚀 高效優化：直接使用預載的人數
   document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
   
-  // 更新報名按鈕狀態
   updateButtons(ev.UserStatus);
 
-  // 時間判斷邏輯
   const isSystemEvent = !ev.CreatorUID; 
   const deadlineBox = document.getElementById('deadline-container');
   const tag = document.getElementById('time-status-tag');
@@ -366,7 +408,6 @@ function selectEvent(eventId){
     }
   }
 
-  // 載入詳細名單清單 (清空舊名單避免殘留)
   document.getElementById('registered-list').innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
   loadStatsList(eventId); 
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
@@ -385,20 +426,17 @@ async function loadStatsList(eventId){
     data.registeredUsers.forEach(u=>{
       ul.innerHTML+=`<li><span>${u.name}</span> <span>${u.attendees}人</span></li>`;
     });
-  } catch(err){
-    console.error('載入名單失敗:', err);
-  }
+  } catch(err){ console.error('載入名單失敗:', err); }
 }
 
 function updateButtons(userStatus){
   const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
   const now = new Date().getTime();
-  
   let withinTime = true;
   if(ev && ev.CreatorUID){
-      const open = new Date(ev.OpenTime).getTime();
-      const close = new Date(ev.CloseTime).getTime();
-      withinTime = (now >= open && now <= close);
+    const open = new Date(ev.OpenTime).getTime();
+    const close = new Date(ev.CloseTime).getTime();
+    withinTime = (now >= open && now <= close);
   }
 
   if(userStatus && userStatus.Status==='Registered'){
@@ -418,8 +456,6 @@ function updateButtons(userStatus){
 
 async function submitRegistration(action){
   if(!CURRENT_EVENT_ID) return;
-  
-  // 防連點：停用所有按鈕
   const btns = document.querySelectorAll('.btn');
   btns.forEach(b => b.disabled = true);
 
@@ -448,7 +484,6 @@ async function submitRegistration(action){
         msg.textContent += ' 視窗即將關閉...';
         setTimeout(() => { liff.closeWindow(); }, 2000);
       } else {
-        // 更新當前列表資料
         await loadEventsList();
         const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
         if(ev) {
