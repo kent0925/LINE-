@@ -435,30 +435,60 @@ async function loadStatsList(eventId){
     
     users.forEach(u => {
       const name = u.name || u.Nickname;
-      const count = u.attendees || u.Attendees_Count;
+      const totalCount = u.attendees || u.Attendees_Count; // 試算表紀錄的總數
       const rawGuests = u.guestNames || u.Guest_Names || "";
 
-      let html = `<div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                    <strong style="color:#2d3748;">${name}</strong> 
-                    <span style="background:var(--line-green); color:white; padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">
-                      共 ${count} 人
-                    </span>
-                  </div>`;
-      
+      // --- 核心計算邏輯 ---
+      let guestCountTotal = 0;
+      let guestBadges = "";
+
       if(rawGuests) {
-        const tags = rawGuests.split(',').map(g => 
-          `<span style="display:inline-block; background:#f1f5f9; color:#4a5568; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #e2e8f0;">${g.trim()}</span>`
-        ).join('');
-        html += `<div style="margin-top:6px; display:flex; flex-wrap:wrap;">${tags}</div>`;
+        guestBadges = rawGuests.split(',').map(g => {
+          const match = g.match(/(.+)\(\+(\d+)\)/);
+          if(match) {
+            const count = parseInt(match[2]);
+            guestCountTotal += count;
+            return `<span style="display:inline-block; background:#f0fdf4; color:#166534; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #bbf7d0;">👤 ${match[1]} +${count}</span>`;
+          }
+          guestCountTotal += 1;
+          return `<span style="display:inline-block; background:#f1f5f9; color:#4a5568; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #e2e8f0;">👤 ${g.trim()}</span>`;
+        }).join('');
+      }
+
+      // 本人數 = 總數 - 來賓攜伴總數
+      const selfCount = Math.max(0, totalCount - guestCountTotal);
+
+      // --- 建立顯示 HTML ---
+      let html = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+          <div>
+            <strong style="color:#2d3748; font-size:1rem;">${name}</strong>
+            <div style="margin-top:4px; font-size:0.85rem; color:#718096;">
+              🏠 本人/家屬：<span style="color:var(--line-green); font-weight:bold;">${selfCount}</span> 人
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span style="background:var(--line-green); color:white; padding:4px 12px; border-radius:20px; font-size:0.85rem; font-weight:bold;">
+              共 ${totalCount} 人
+            </span>
+          </div>
+        </div>
+      `;
+      
+      if(guestBadges) {
+        html += `<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #edf2f7; display:flex; flex-wrap:wrap;">
+                   <div style="width:100%; font-size:0.75rem; color:#a0aec0; margin-bottom:4px;">📋 來賓名單 (${guestCountTotal}人)：</div>
+                   ${guestBadges}
+                 </div>`;
       }
       
       const li = document.createElement('li');
-      li.style.cssText = "border-left:4px solid var(--line-green); margin-bottom:10px; padding-left:12px; background:#fff; border-radius:0 12px 12px 0;";
+      li.style.cssText = "border-left:5px solid var(--line-green); margin-bottom:15px; padding:12px; background:#fff; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
       li.innerHTML = html;
       ul.appendChild(li);
     });
   } catch(err){
-    ul.innerHTML = '<li style="text-align:center;">名單載入中...</li>';
+    ul.innerHTML = '<li style="text-align:center;">名單載入失敗</li>';
   }
 }
 
