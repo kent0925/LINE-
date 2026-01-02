@@ -7,7 +7,6 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
-/* 定義現代感配色 */
 :root {
   --line-green: #06C755;
   --line-dark: #05a346;
@@ -76,7 +75,6 @@ h2::before {
   border-radius: 10px;
 }
 
-/* --- 修改：強化版活動按鈕樣式 --- */
 .event-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -102,14 +100,14 @@ h2::before {
 }
 
 .event-card:active {
-  transform: scale(0.92); /* 點擊時縮小回饋 */
+  transform: scale(0.92);
 }
 
 .event-card.selected {
   border-color: var(--line-green);
   background-color: #ffffff;
-  transform: translateY(-5px); /* 選中時向上浮起 */
-  box-shadow: 0 12px 20px -8px rgba(6, 199, 85, 0.4); /* 綠色發光陰影 */
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px -8px rgba(6, 199, 85, 0.4);
 }
 
 .event-card.selected .event-title {
@@ -141,7 +139,6 @@ h2::before {
   font-size: 0.8rem;
   color: #718096;
 }
-/* --------------------------- */
 
 label {
   display: block; 
@@ -193,22 +190,11 @@ input:focus, select:focus, textarea:focus {
 
 #form-actions { display: flex; gap: 4px; margin-top: 20px; }
 
-.time-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  margin-top: 10px;
-}
-.tag-closed { background: #fee2e2; color: #ef4444; }
-.tag-open { background: #dcfce7; color: #16a34a; }
-
 .stats-list {
   list-style: none;
   padding: 0; 
   margin: 10px 0 0 0;
-  max-height: 180px; 
+  max-height: 250px; 
   overflow-y: auto; 
 }
 
@@ -217,7 +203,7 @@ input:focus, select:focus, textarea:focus {
   border-bottom: 1px solid #f7fafc;
   font-size: 0.95rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
 }
 
 .message {
@@ -248,6 +234,31 @@ input:focus, select:focus, textarea:focus {
   animation: spin 1s linear infinite;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.guest-input-group { 
+  display: flex; 
+  gap: 8px; 
+  margin-bottom: 10px; 
+  width: 100%;
+  align-items: center;
+}
+.guest-name-item {
+  flex: 2;
+}
+.guest-count-item {
+  flex: 1;
+  min-width: 80px;
+}
+.btn-del-guest { 
+  background: #fee2e2; 
+  color: var(--accent-red); 
+  border: 1px solid #fed7d7; 
+  border-radius: 12px; 
+  padding: 0 15px; 
+  cursor: pointer;
+  font-weight: bold;
+  height: 42px;
+}
 </style>
 </head>
 <body>
@@ -273,13 +284,6 @@ input:focus, select:focus, textarea:focus {
       <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
       <p>📍 <strong>地點：</strong><span id="info-location"></span> 
          <a id="info-map-link" href="#" target="_blank" style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a></p>
-      
-      <div id="deadline-container">
-        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-        <p>⏳ <strong style="color:var(--accent-red);">報名截止：</strong><span id="info-close-time"></span></p>
-      </div>
-      
-      <div id="time-status-tag" class="time-tag"></div>
     </div>
   </div>
 
@@ -289,12 +293,16 @@ input:focus, select:focus, textarea:focus {
       <strong>姓名：</strong> <span id="line-nickname" style="color:var(--line-dark); font-weight:bold;">載入中...</span>
     </p>
 
-    <label for="attendees-count">參加人數</label>
+    <label for="attendees-count">本人/家屬人數</label>
     <select id="attendees-count"></select>
 
-    <label for="guest-names">來賓備註 (選填)</label>
-    <textarea id="guest-names" rows="2" placeholder="再請填寫來賓姓名"></textarea>
-
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px;">
+      <label style="margin:0;">來賓姓名及其人數</label>
+      <button type="button" onclick="addGuestInput()" style="background:var(--line-green); color:white; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold;">+ 新增來賓</button>
+    </div>
+    
+    <div id="guest-inputs-container" style="margin-top:10px;"></div>
+    
     <div id="form-actions">
       <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
       <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
@@ -312,9 +320,23 @@ input:focus, select:focus, textarea:focus {
 </div>
 
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
-const LIFF_ID='2008678090-aXTesgDK';
+const GAS_URL='https://script.google.com/macros/s/AKfycbzS99Xj9BMLxUYsOrFL5W3rngQD50Mn8LeCGknOi3BLJUxHhJ4cPDYoUMNZ3xY1rxBn/exec';
+const LIFF_ID='2008678090-SEONUKky';
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
+
+function addGuestInput(val = '', count = 1) {
+  const container = document.getElementById('guest-inputs-container');
+  const div = document.createElement('div');
+  div.className = 'guest-input-group';
+  div.innerHTML = `
+    <input type="text" class="guest-name-item" value="${val}" placeholder="輸入來賓姓名">
+    <select class="guest-count-item">
+      ${[1,2,3,4,5,6,7,8,9,10].map(i => `<option value="${i}" ${i==count?'selected':''}>+${i}</option>`).join('')}
+    </select>
+    <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
+  `;
+  container.appendChild(div);
+}
 
 async function initializeLiff(){
   try {
@@ -342,7 +364,6 @@ function formatLocalTime(iso){
   return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-// 修改點：loadEventsList 改為生成按鈕卡片
 async function loadEventsList(){
   try {
     const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
@@ -354,7 +375,7 @@ async function loadEventsList(){
 
     ALL_EVENTS.forEach(ev => {
       const card = document.createElement('div');
-      card.className = 'event-card';
+      card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
       
       let html = '';
       if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
@@ -363,12 +384,8 @@ async function loadEventsList(){
       
       card.innerHTML = html;
       card.onclick = function() {
-        // 視覺選中效果
         document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
         this.classList.add('selected');
-        // 觸覺反饋
-        if (window.navigator.vibrate) window.navigator.vibrate(10);
-        // 原有邏輯
         selectEvent(ev.EventID);
       };
       container.appendChild(card);
@@ -383,12 +400,7 @@ async function loadEventsList(){
 
 function selectEvent(eventId){
   const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
-  if(!ev) {
-    document.getElementById('activity-info').style.display='none';
-    document.getElementById('registration-form').style.display='none';
-    document.getElementById('statistics').style.display='none';
-    return;
-  }
+  if(!ev) return;
   CURRENT_EVENT_ID = eventId;
   
   document.getElementById('activity-info').style.display='block';
@@ -404,107 +416,118 @@ function selectEvent(eventId){
   document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
   
   updateButtons(ev.UserStatus);
-
-  const isSystemEvent = !ev.CreatorUID; 
-  const deadlineBox = document.getElementById('deadline-container');
-  const tag = document.getElementById('time-status-tag');
-  const regBtn = document.getElementById('btn-register');
-
-  if (isSystemEvent) {
-    deadlineBox.style.display = 'none';
-    tag.style.display = 'none';
-    regBtn.disabled = false;
-  } else {
-    deadlineBox.style.display = 'block';
-    tag.style.display = 'inline-block';
-    document.getElementById('info-close-time').textContent = formatLocalTime(ev.CloseTime);
-
-    const now = new Date().getTime();
-    const open = new Date(ev.OpenTime).getTime();
-    const close = new Date(ev.CloseTime).getTime();
-
-    if (now < open) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = `🚫 尚未開放報名`;
-      regBtn.disabled = true;
-    } else if (now > close) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = '❌ 報名已截止';
-      regBtn.disabled = true;
-    } else {
-      tag.className = 'time-tag tag-open';
-      tag.textContent = '✅ 開放報名中';
-      regBtn.disabled = false;
-    }
-  }
-
-  document.getElementById('registered-list').innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
   loadStatsList(eventId); 
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function loadStatsList(eventId){
+  const ul = document.getElementById('registered-list');
   try {
     const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
     const data = await res.json();
-    const ul = document.getElementById('registered-list');
-    ul.innerHTML='';
-    if(!data.registeredUsers || data.registeredUsers.length === 0){
+    ul.innerHTML = '';
+    
+    const users = data.registeredUsers || [];
+    if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
       return;
     }
-    data.registeredUsers.forEach(u=>{
-      ul.innerHTML+=`<li><span>${u.name}</span> <span>${u.attendees}人</span></li>`;
+    
+    users.forEach(u => {
+      const name = u.name || u.Nickname;
+      const count = u.attendees || u.Attendees_Count;
+      const rawGuests = u.guestNames || u.Guest_Names || "";
+
+      let html = `<div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                    <strong style="color:#2d3748;">${name}</strong> 
+                    <span style="background:var(--line-green); color:white; padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">
+                      共 ${count} 人
+                    </span>
+                  </div>`;
+      
+      if(rawGuests) {
+        const tags = rawGuests.split(',').map(g => 
+          `<span style="display:inline-block; background:#f1f5f9; color:#4a5568; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #e2e8f0;">${g.trim()}</span>`
+        ).join('');
+        html += `<div style="margin-top:6px; display:flex; flex-wrap:wrap;">${tags}</div>`;
+      }
+      
+      const li = document.createElement('li');
+      li.style.cssText = "border-left:4px solid var(--line-green); margin-bottom:10px; padding-left:12px; background:#fff; border-radius:0 12px 12px 0;";
+      li.innerHTML = html;
+      ul.appendChild(li);
     });
   } catch(err){
-    console.error('載入名單失敗:', err);
+    ul.innerHTML = '<li style="text-align:center;">名單載入中...</li>';
   }
 }
 
 function updateButtons(userStatus){
-  const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
-  const now = new Date().getTime();
-  
-  let withinTime = true;
-  if(ev && ev.CreatorUID){
-      const open = new Date(ev.OpenTime).getTime();
-      const close = new Date(ev.CloseTime).getTime();
-      withinTime = (now >= open && now <= close);
-  }
+  document.getElementById('guest-inputs-container').innerHTML = '';
+  const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
 
-  if(userStatus && userStatus.Status==='Registered'){
+  if(isRegistered){
     document.getElementById('btn-register').style.display='none';
     document.getElementById('btn-cancel').style.display='inline-block';
     document.getElementById('btn-edit').style.display='inline-block';
-    document.getElementById('attendees-count').value = userStatus.Attendees_Count||1;
-    document.getElementById('guest-names').value = userStatus.Guest_Names||'';
+    
+    const total = userStatus.Attendees_Count || userStatus.attendees || 1;
+    const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
+    
+    let guestPartTotal = 0;
+    if(namesStr) {
+      namesStr.split(',').forEach(item => {
+        const match = item.match(/(.+)\(\+(\d+)\)/);
+        if(match) {
+          const gName = match[1];
+          const gCount = parseInt(match[2]);
+          addGuestInput(gName, gCount);
+          guestPartTotal += gCount;
+        } else if(item.trim()) {
+          addGuestInput(item.trim(), 1);
+          guestPartTotal += 1;
+        }
+      });
+    }
+    document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
   } else {
-    document.getElementById('btn-register').style.display = withinTime ? 'inline-block' : 'none';
+    document.getElementById('btn-register').style.display='inline-block';
     document.getElementById('btn-cancel').style.display='none';
     document.getElementById('btn-edit').style.display='none';
     document.getElementById('attendees-count').value = 1;
-    document.getElementById('guest-names').value = '';
   }
 }
 
 async function submitRegistration(action){
-  if(!CURRENT_EVENT_ID) return;
-  
   const btns = document.querySelectorAll('.btn');
   btns.forEach(b => b.disabled = true);
-
   const msg = document.getElementById('form-message');
   msg.style.display = 'block';
   msg.className = 'message';
   msg.textContent = '⏳ 處理中...';
+
+  const guestNamesWithCount = [];
+  let totalGuestsCount = 0;
+  
+  document.querySelectorAll('.guest-input-group').forEach(group => {
+    const name = group.querySelector('.guest-name-item').value.trim();
+    const count = parseInt(group.querySelector('.guest-count-item').value);
+    if(name) {
+      guestNamesWithCount.push(`${name}(+${count})`); 
+      totalGuestsCount += count;
+    }
+  });
+
+  const userCount = parseInt(document.getElementById('attendees-count').value);
+  const finalTotal = userCount + totalGuestsCount;
 
   const payload = {
     action,
     eventId: CURRENT_EVENT_ID,
     lineUid: LINE_UID,
     lineNickname: LINE_NICKNAME,
-    attendeesCount: parseInt(document.getElementById('attendees-count').value),
-    guestNames: document.getElementById('guest-names').value
+    attendeesCount: finalTotal,
+    guestNames: guestNamesWithCount.join(',')
   };
 
   try {
@@ -515,23 +538,16 @@ async function submitRegistration(action){
 
     if (data.status === 'success') {
       if (action === 'register' || action === 'cancel') {
-        msg.textContent += ' 視窗即將關閉...';
         setTimeout(() => { liff.closeWindow(); }, 2000);
       } else {
         await loadEventsList();
-        const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
-        if(ev) {
-          updateButtons(ev.UserStatus);
-          document.getElementById('total-attendees').textContent = ev.TotalAttendees;
-        }
-        loadStatsList(CURRENT_EVENT_ID);
+        selectEvent(CURRENT_EVENT_ID);
         btns.forEach(b => b.disabled = false);
       }
     } else {
       btns.forEach(b => b.disabled = false);
     }
   } catch(err){
-    msg.className = 'message error';
     msg.textContent = '❌ 連線異常';
     btns.forEach(b => b.disabled = false);
   }
