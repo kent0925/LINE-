@@ -361,7 +361,19 @@ function formatLocalTime(iso){
   if(!iso) return "--";
   const d = new Date(iso);
   if(isNaN(d.getTime())) return iso;
-  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  
+  // 定義星期字串陣列
+  const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+  const dayName = weekDays[d.getDay()]; // 取得星期幾
+  
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const date = d.getDate();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+
+  // 回傳格式：2024/5/20 (一) 14:30
+  return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
 }
 
 async function loadEventsList(){
