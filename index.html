@@ -188,6 +188,20 @@ input:focus, select:focus, textarea:focus {
 .btn-cancel { background: #fee2e2; color: var(--accent-red); }
 .btn-edit { background: #e0f2fe; color: var(--accent-blue); }
 
+/* 新增：匯出按鈕樣式 */
+.btn-export {
+  background: #4a5568;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.btn-export:active { transform: scale(0.95); }
+
 #form-actions { display: flex; gap: 4px; margin-top: 20px; }
 
 .stats-list {
@@ -313,7 +327,10 @@ input:focus, select:focus, textarea:focus {
   </div>
 
   <div id="statistics" class="stats-section" style="display:none;">
-    <h2>報名動態</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <h2 style="margin:0;">報名動態</h2>
+      <button id="btn-export" class="btn-export" onclick="exportDataToCSV()">📥 匯出 CSV</button>
+    </div>
     <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
     <ul id="registered-list" class="stats-list"></ul>
   </div>
@@ -432,6 +449,9 @@ function selectEvent(eventId){
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
+// 提取載入名單的資料邏輯 (不改動原有邏輯，僅供匯出使用)
+let LAST_LOADED_USERS = []; 
+
 async function loadStatsList(eventId){
   const ul = document.getElementById('registered-list');
   try {
@@ -440,6 +460,8 @@ async function loadStatsList(eventId){
     ul.innerHTML = '';
     
     const users = data.registeredUsers || [];
+    LAST_LOADED_USERS = users; // 暫存起來給匯出功能用
+    
     if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
       return;
@@ -502,6 +524,40 @@ async function loadStatsList(eventId){
   } catch(err){
     ul.innerHTML = '<li style="text-align:center;">名單載入失敗</li>';
   }
+}
+
+// 新增功能：匯出 CSV
+function exportDataToCSV() {
+  if (LAST_LOADED_USERS.length === 0) {
+    alert("目前無名單可匯出");
+    return;
+  }
+
+  // 1. 準備 CSV 表頭 (加入 BOM 防止中文亂碼)
+  let csvContent = "\uFEFF姓名,總人數,來賓清單\n";
+
+  // 2. 組合每一行的資料
+  LAST_LOADED_USERS.forEach(u => {
+    const name = u.name || u.Nickname;
+    const count = u.attendees || u.Attendees_Count;
+    // 將來賓名單內的逗號換成空格或分號，避免 CSV 格式跑掉
+    const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
+    csvContent += `"${name}","${count}","${guests}"\n`;
+  });
+
+  // 3. 建立下載檔案
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  
+  // 檔名加上活動標題
+  const eventTitle = document.getElementById('info-title').textContent || '活動報名';
+  link.setAttribute("href", url);
+  link.setAttribute("download", `報名名單_${eventTitle}.csv`);
+  document.body.appendChild(link);
+  
+  link.click();
+  document.body.removeChild(link);
 }
 
 function updateButtons(userStatus){
