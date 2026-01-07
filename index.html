@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -499,14 +500,14 @@ async function loadStatsList(eventId){
   }
 }
 
-// 針對手機 LINE 環境優化：複製文字到剪貼簿 (已補強活動詳細資訊)
+// 針對手機 LINE 環境優化：複製文字到剪貼簿 (包含活動資訊與報名連結)
 function copyDataToClipboard() {
   if (LAST_LOADED_USERS.length === 0) {
     alert("目前無名單可匯出");
     return;
   }
 
-  // 1. 從 DOM 抓取當前活動顯示的資訊
+  // 1. 從 DOM 抓取資訊
   const eventTitle = document.getElementById('info-title').textContent || '活動報名';
   const creator = document.getElementById('info-creator').textContent || '--';
   const eventTime = document.getElementById('info-time').textContent || '--';
@@ -514,6 +515,9 @@ function copyDataToClipboard() {
   const location = document.getElementById('info-location').textContent || '--';
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
   const now = new Date().toLocaleString('zh-TW');
+  
+  // 自動生成報名網址 (使用程式碼上方的 LIFF_ID)
+  const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
 
   // 2. 組合更詳盡的文字內容
   let textContent = `【${eventTitle}】\n`;
@@ -536,8 +540,9 @@ function copyDataToClipboard() {
 
   textContent += `------------------------------------------\n`;
   textContent += `📊 目前總報名人數統計：${totalDisplay} 人\n`;
+  textContent += `🔗 報名網址：${registrationUrl}\n`; // 在最下方增加網址
 
-  // 3. 執行複製邏輯 (保持原有相容性設計)
+  // 3. 執行複製邏輯
   const fallbackCopyTextToClipboard = (text) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
