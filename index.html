@@ -328,7 +328,7 @@ input:focus, select:focus, textarea:focus {
   <div id="statistics" class="stats-section" style="display:none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h2 style="margin:0;">報名動態</h2>
-      <button id="btn-export" class="btn-export" onclick="exportDataToTXT()">📄 匯出報名名單</button>
+      <button id="btn-export" class="btn-export" onclick="copyDataToClipboard()">📋 複製報名名單</button>
     </div>
     <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
     <ul id="registered-list" class="stats-list"></ul>
@@ -392,19 +392,15 @@ async function loadEventsList(){
     const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
     const data = await res.json();
     ALL_EVENTS = data.events || [];
-
     const container = document.getElementById('event-button-container');
     container.innerHTML = '';
-
     ALL_EVENTS.forEach(ev => {
       const card = document.createElement('div');
       card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
-      
       let html = '';
       if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
       html += `<span class="event-title">${ev.Title}</span>`;
       html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
-      
       card.innerHTML = html;
       card.onclick = function() {
         document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
@@ -413,7 +409,6 @@ async function loadEventsList(){
       };
       container.appendChild(card);
     });
-
     document.getElementById('loading-spinner').style.display='none';
     document.getElementById('event-selection').style.display='block';
   } catch(err){
@@ -425,11 +420,9 @@ function selectEvent(eventId){
   const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
   if(!ev) return;
   CURRENT_EVENT_ID = eventId;
-  
   document.getElementById('activity-info').style.display='block';
   document.getElementById('registration-form').style.display='block';
   document.getElementById('statistics').style.display='block';
-  
   document.getElementById('info-title').textContent = ev.Title;
   document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
   document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
@@ -437,7 +430,6 @@ function selectEvent(eventId){
   document.getElementById('info-location').textContent = ev.Address;
   document.getElementById('info-map-link').href = ev.MapUrl || '#';
   document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
-  
   updateButtons(ev.UserStatus);
   loadStatsList(eventId); 
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
@@ -451,23 +443,18 @@ async function loadStatsList(eventId){
     const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
     const data = await res.json();
     ul.innerHTML = '';
-    
     const users = data.registeredUsers || [];
     LAST_LOADED_USERS = users; 
-    
     if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
       return;
     }
-    
     users.forEach(u => {
       const name = u.name || u.Nickname;
       const totalCount = u.attendees || u.Attendees_Count; 
       const rawGuests = u.guestNames || u.Guest_Names || "";
-
       let guestCountTotal = 0;
       let guestBadges = "";
-
       if(rawGuests) {
         guestBadges = rawGuests.split(',').map(g => {
           const match = g.match(/(.+)\(\+(\d+)\)/);
@@ -480,9 +467,7 @@ async function loadStatsList(eventId){
           return `<span style="display:inline-block; background:#f1f5f9; color:#4a5568; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #e2e8f0;">👤 ${g.trim()}</span>`;
         }).join('');
       }
-
       const selfCount = Math.max(0, totalCount - guestCountTotal);
-
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
           <div>
@@ -498,14 +483,12 @@ async function loadStatsList(eventId){
           </div>
         </div>
       `;
-      
       if(guestBadges) {
         html += `<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #edf2f7; display:flex; flex-wrap:wrap;">
                    <div style="width:100%; font-size:0.75rem; color:#a0aec0; margin-bottom:4px;">📋 來賓名單 (${guestCountTotal}人)：</div>
                    ${guestBadges}
                  </div>`;
       }
-      
       const li = document.createElement('li');
       li.style.cssText = "border-left:5px solid var(--line-green); margin-bottom:15px; padding:12px; background:#fff; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.02);";
       li.innerHTML = html;
@@ -516,8 +499,8 @@ async function loadStatsList(eventId){
   }
 }
 
-// 僅針對此功能調整：匯出為 TXT
-function exportDataToTXT() {
+// 針對手機 LINE 環境優化：複製文字到剪貼簿
+function copyDataToClipboard() {
   if (LAST_LOADED_USERS.length === 0) {
     alert("目前無名單可匯出");
     return;
@@ -527,7 +510,6 @@ function exportDataToTXT() {
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
   const now = new Date().toLocaleString('zh-TW');
 
-  // 1. 組合 TXT 內容
   let textContent = `【活動報名名單：${eventTitle}】\n`;
   textContent += `匯出時間：${now}\n`;
   textContent += `------------------------------------------\n\n`;
@@ -536,46 +518,52 @@ function exportDataToTXT() {
     const name = u.name || u.Nickname;
     const count = u.attendees || u.Attendees_Count;
     const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
-    
     textContent += `${index + 1}. 報名者：${name}\n`;
     textContent += `   人數總計：${count} 人\n`;
-    if(guests) {
-      textContent += `   來賓細項：${guests}\n`;
-    }
+    if(guests) { textContent += `   來賓細項：${guests}\n`; }
     textContent += `\n`;
   });
 
   textContent += `------------------------------------------\n`;
   textContent += `📊 目前總報名人數統計：${totalDisplay} 人\n`;
 
-  // 2. 使用 FileReader 技術下載（優化手機下載流程）
-  const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
-  const fileName = `報名名單_${eventTitle}.txt`;
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const link = document.createElement("a");
-    link.href = e.target.result;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  reader.readAsDataURL(blob);
+  // 執行複製
+  const fallbackCopyTextToClipboard = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed"; 
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if(successful) alert("✅ 名單已複製到剪貼簿！\n您可以直接到 LINE 貼上分享。");
+    } catch (err) {
+      alert("❌ 複製失敗，請手動全選名單內容。");
+    }
+    document.body.removeChild(textArea);
+  }
+
+  if (!navigator.clipboard) {
+    fallbackCopyTextToClipboard(textContent);
+    return;
+  }
+  navigator.clipboard.writeText(textContent).then(() => {
+    alert("✅ 名單已複製到剪貼簿！\n您可以直接到 LINE 貼上分享。");
+  }, (err) => {
+    fallbackCopyTextToClipboard(textContent);
+  });
 }
 
 function updateButtons(userStatus){
   document.getElementById('guest-inputs-container').innerHTML = '';
   const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
-
   if(isRegistered){
     document.getElementById('btn-register').style.display='none';
     document.getElementById('btn-cancel').style.display='inline-block';
     document.getElementById('btn-edit').style.display='inline-block';
-    
     const total = userStatus.Attendees_Count || userStatus.attendees || 1;
     const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
-    
     let guestPartTotal = 0;
     if(namesStr) {
       namesStr.split(',').forEach(item => {
@@ -607,10 +595,8 @@ async function submitRegistration(action){
   msg.style.display = 'block';
   msg.className = 'message';
   msg.textContent = '⏳ 處理中...';
-
   const guestNamesWithCount = [];
   let totalGuestsCount = 0;
-  
   document.querySelectorAll('.guest-input-group').forEach(group => {
     const name = group.querySelector('.guest-name-item').value.trim();
     const count = parseInt(group.querySelector('.guest-count-item').value);
@@ -619,25 +605,18 @@ async function submitRegistration(action){
       totalGuestsCount += count;
     }
   });
-
   const userCount = parseInt(document.getElementById('attendees-count').value);
   const finalTotal = userCount + totalGuestsCount;
-
   const payload = {
-    action,
-    eventId: CURRENT_EVENT_ID,
-    lineUid: LINE_UID,
-    lineNickname: LINE_NICKNAME,
-    attendeesCount: finalTotal,
+    action, eventId: CURRENT_EVENT_ID, lineUid: LINE_UID,
+    lineNickname: LINE_NICKNAME, attendeesCount: finalTotal,
     guestNames: guestNamesWithCount.join(',')
   };
-
   try {
     const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
     const data = await res.json();
     msg.className = data.status==='success'?'message success':'message error';
     msg.textContent = data.message;
-
     if (data.status === 'success') {
       if (action === 'register' || action === 'cancel') {
         setTimeout(() => { liff.closeWindow(); }, 2000);
