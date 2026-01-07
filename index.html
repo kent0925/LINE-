@@ -188,7 +188,6 @@ input:focus, select:focus, textarea:focus {
 .btn-cancel { background: #fee2e2; color: var(--accent-red); }
 .btn-edit { background: #e0f2fe; color: var(--accent-blue); }
 
-/* 新增：匯出按鈕樣式 */
 .btn-export {
   background: #4a5568;
   color: white;
@@ -329,7 +328,7 @@ input:focus, select:focus, textarea:focus {
   <div id="statistics" class="stats-section" style="display:none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h2 style="margin:0;">報名動態</h2>
-      <button id="btn-export" class="btn-export" onclick="exportDataToCSV()">📥 匯出 CSV</button>
+      <button id="btn-export" class="btn-export" onclick="exportDataToTXT()">📄 匯出報名名單</button>
     </div>
     <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
     <ul id="registered-list" class="stats-list"></ul>
@@ -378,18 +377,13 @@ function formatLocalTime(iso){
   if(!iso) return "--";
   const d = new Date(iso);
   if(isNaN(d.getTime())) return iso;
-  
-  // 定義星期字串陣列
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-  const dayName = weekDays[d.getDay()]; // 取得星期幾
-  
+  const dayName = weekDays[d.getDay()]; 
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
   const date = d.getDate();
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
-
-  // 回傳格式：2024/5/20 (一) 14:30
   return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
 }
 
@@ -449,7 +443,6 @@ function selectEvent(eventId){
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
-// 提取載入名單的資料邏輯 (不改動原有邏輯，僅供匯出使用)
 let LAST_LOADED_USERS = []; 
 
 async function loadStatsList(eventId){
@@ -460,7 +453,7 @@ async function loadStatsList(eventId){
     ul.innerHTML = '';
     
     const users = data.registeredUsers || [];
-    LAST_LOADED_USERS = users; // 暫存起來給匯出功能用
+    LAST_LOADED_USERS = users; 
     
     if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
@@ -469,10 +462,9 @@ async function loadStatsList(eventId){
     
     users.forEach(u => {
       const name = u.name || u.Nickname;
-      const totalCount = u.attendees || u.Attendees_Count; // 試算表紀錄的總數
+      const totalCount = u.attendees || u.Attendees_Count; 
       const rawGuests = u.guestNames || u.Guest_Names || "";
 
-      // --- 核心計算邏輯 ---
       let guestCountTotal = 0;
       let guestBadges = "";
 
@@ -489,10 +481,8 @@ async function loadStatsList(eventId){
         }).join('');
       }
 
-      // 本人數 = 總數 - 來賓攜伴總數
       const selfCount = Math.max(0, totalCount - guestCountTotal);
 
-      // --- 建立顯示 HTML ---
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
           <div>
@@ -526,38 +516,52 @@ async function loadStatsList(eventId){
   }
 }
 
-// 新增功能：匯出 CSV
-function exportDataToCSV() {
+// 僅針對此功能調整：匯出為 TXT
+function exportDataToTXT() {
   if (LAST_LOADED_USERS.length === 0) {
     alert("目前無名單可匯出");
     return;
   }
 
-  // 1. 準備 CSV 表頭 (加入 BOM 防止中文亂碼)
-  let csvContent = "\uFEFF姓名,總人數,來賓清單\n";
+  const eventTitle = document.getElementById('info-title').textContent || '活動報名';
+  const totalDisplay = document.getElementById('total-attendees').textContent || '0';
+  const now = new Date().toLocaleString('zh-TW');
 
-  // 2. 組合每一行的資料
-  LAST_LOADED_USERS.forEach(u => {
+  // 1. 組合 TXT 內容
+  let textContent = `【活動報名名單：${eventTitle}】\n`;
+  textContent += `匯出時間：${now}\n`;
+  textContent += `------------------------------------------\n\n`;
+
+  LAST_LOADED_USERS.forEach((u, index) => {
     const name = u.name || u.Nickname;
     const count = u.attendees || u.Attendees_Count;
-    // 將來賓名單內的逗號換成空格或分號，避免 CSV 格式跑掉
     const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
-    csvContent += `"${name}","${count}","${guests}"\n`;
+    
+    textContent += `${index + 1}. 報名者：${name}\n`;
+    textContent += `   人數總計：${count} 人\n`;
+    if(guests) {
+      textContent += `   來賓細項：${guests}\n`;
+    }
+    textContent += `\n`;
   });
 
-  // 3. 建立下載檔案
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  textContent += `------------------------------------------\n`;
+  textContent += `📊 目前總報名人數統計：${totalDisplay} 人\n`;
+
+  // 2. 使用 FileReader 技術下載（優化手機下載流程）
+  const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+  const fileName = `報名名單_${eventTitle}.txt`;
   
-  // 檔名加上活動標題
-  const eventTitle = document.getElementById('info-title').textContent || '活動報名';
-  link.setAttribute("href", url);
-  link.setAttribute("download", `報名名單_${eventTitle}.csv`);
-  document.body.appendChild(link);
-  
-  link.click();
-  document.body.removeChild(link);
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const link = document.createElement("a");
+    link.href = e.target.result;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  reader.readAsDataURL(blob);
 }
 
 function updateButtons(userStatus){
