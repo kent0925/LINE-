@@ -520,7 +520,7 @@ function copyDataToClipboard() {
     const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
     textContent += `${index + 1}. 報名者：${name}\n`;
     textContent += `   人數總計：${count} 人\n`;
-    if(guests) { textContent += `   來賓細項：${guests}\n`; }
+    if(guests) { textContent += `   來賓：${guests}\n`; }
     textContent += `\n`;
   });
 
