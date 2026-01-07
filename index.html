@@ -499,19 +499,29 @@ async function loadStatsList(eventId){
   }
 }
 
-// 針對手機 LINE 環境優化：複製文字到剪貼簿
+// 針對手機 LINE 環境優化：複製文字到剪貼簿 (已補強活動詳細資訊)
 function copyDataToClipboard() {
   if (LAST_LOADED_USERS.length === 0) {
     alert("目前無名單可匯出");
     return;
   }
 
+  // 1. 從 DOM 抓取當前活動顯示的資訊
   const eventTitle = document.getElementById('info-title').textContent || '活動報名';
+  const creator = document.getElementById('info-creator').textContent || '--';
+  const eventTime = document.getElementById('info-time').textContent || '--';
+  const venue = document.getElementById('info-venue-name').textContent || '--';
+  const location = document.getElementById('info-location').textContent || '--';
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
   const now = new Date().toLocaleString('zh-TW');
 
-  let textContent = `【活動報名名單：${eventTitle}】\n`;
-  textContent += `匯出時間：${now}\n`;
+  // 2. 組合更詳盡的文字內容
+  let textContent = `【${eventTitle}】\n`;
+  textContent += `👤 主辦者：${creator}\n`;
+  textContent += `🕒 活動時間：${eventTime}\n`;
+  textContent += `🏠 場地：${venue}\n`;
+  textContent += `📍 地點：${location}\n`;
+  textContent += `📅 匯出時間：${now}\n`;
   textContent += `------------------------------------------\n\n`;
 
   LAST_LOADED_USERS.forEach((u, index) => {
@@ -527,7 +537,7 @@ function copyDataToClipboard() {
   textContent += `------------------------------------------\n`;
   textContent += `📊 目前總報名人數統計：${totalDisplay} 人\n`;
 
-  // 執行複製
+  // 3. 執行複製邏輯 (保持原有相容性設計)
   const fallbackCopyTextToClipboard = (text) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
