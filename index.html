@@ -521,11 +521,10 @@ function copyDataToClipboard() {
 
   // 2. 組合更詳盡的文字內容
   let textContent = `【${eventTitle}】\n`;
-  textContent += `👤 主辦者：${creator}\n`;
+  textContent += `👤 爐主：${creator}\n`;
   textContent += `🕒 活動時間：${eventTime}\n`;
   textContent += `🏠 場地：${venue}\n`;
   textContent += `📍 地點：${location}\n`;
-  textContent += `📅 匯出時間：${now}\n`;
   textContent += `------------------------------------------\n\n`;
 
   LAST_LOADED_USERS.forEach((u, index) => {
