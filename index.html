@@ -741,23 +741,21 @@
             }
         }
 
-        // 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：隱藏 *1)
+// 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：來賓人數判斷)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
                 return;
             }
 
-            // 1. 從 DOM 抓取資訊
             const eventTitle = document.getElementById('info-title').textContent || '活動報名';
             const creator = document.getElementById('info-creator').textContent || '--';
             const eventTime = document.getElementById('info-time').textContent || '--';
             const venue = document.getElementById('info-venue-name').textContent || '--';
-            const locText = document.getElementById('info-location').textContent || '--'; //
+            const locText = document.getElementById('info-location').textContent || '--'; 
             const totalDisplay = document.getElementById('total-attendees').textContent || '0';
             const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
 
-            // 2. 組合文字內容
             let textContent = `【${eventTitle}】\n`;
             textContent += `👤 爐主：${creator}\n`;
             textContent += `🕒 時間：${eventTime}\n`;
@@ -765,35 +763,50 @@
             textContent += `🏠 地址：${locText}\n`;
             textContent += `------------------\n`;
 
-            // --- 遍歷名單 ---
             LAST_LOADED_USERS.forEach((u, index) => {
                 const name = u.name || u.Nickname;
                 const count = parseInt(u.attendees || u.Attendees_Count || 1);
-                const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
+                
+                // --- 修改開始：來賓顯示邏輯 ---
+                const rawGuests = u.guestNames || u.Guest_Names || "";
+                let guestTextFormatted = "";
+                
+                if (rawGuests) {
+                    const guestArray = rawGuests.split(',').map(g => {
+                        // 使用正則表達式解析 "姓名(+人數)"
+                        const match = g.match(/(.+)\(\+(\d+)\)/);
+                        if (match) {
+                            const gName = match[1].trim();
+                            const gCount = parseInt(match[2]);
+                            // 關鍵判斷：人數大於 1 才顯示 *2
+                            return gCount > 1 ? `${gName}*${gCount}` : gName;
+                        }
+                        return g.trim();
+                    });
+                    guestTextFormatted = guestArray.join(' / ');
+                }
+                // --- 修改結束 ---
 
-                // 序號補零 (例如 01, 02...)
                 const displayIndex = (index + 1).toString().padStart(2, '0');
 
-                // 只有人數大於 1 時才加上 *數量
+                // 本人/家屬顯示
                 let lineText = `${displayIndex}. ${name}`;
                 if (count > 1) {
                     lineText += `*${count}`;
                 }
-
                 textContent += lineText + `\n`;
 
-                // 顯示來賓
-                if (guests) {
-                    textContent += `   來賓：${guests}\n`;
+                // 顯示來賓 (使用上面處理好的 guestTextFormatted)
+                if (guestTextFormatted) {
+                    textContent += `   來賓：${guestTextFormatted}\n`;
                 }
             });
-            // --- 遍歷結束 ---
 
             textContent += `------------------\n`;
             textContent += `📊 總計：${totalDisplay} 人\n`;
             textContent += `🔗 報名：${registrationUrl}\n`;
 
-            // 3. 執行複製邏輯
+            // 執行複製邏輯
             const fallbackCopyTextToClipboard = (text) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
