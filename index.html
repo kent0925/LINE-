@@ -499,7 +499,7 @@ async function loadStatsList(eventId){
   }
 }
 
-// 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：精簡格式)
+// 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：隱藏 *1)
 function copyDataToClipboard() {
   if (LAST_LOADED_USERS.length === 0) {
     alert("目前無名單可匯出");
@@ -511,7 +511,6 @@ function copyDataToClipboard() {
   const creator = document.getElementById('info-creator').textContent || '--';
   const eventTime = document.getElementById('info-time').textContent || '--';
   const venue = document.getElementById('info-venue-name').textContent || '--';
-  const location = document.getElementById('info-location').textContent || '--';
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
   
   // 自動生成報名網址
@@ -522,35 +521,47 @@ function copyDataToClipboard() {
   textContent += `👤 爐主：${creator}\n`;
   textContent += `🕒 時間：${eventTime}\n`;
   textContent += `📍 地點：${venue}\n`;
-  textContent += `------------------\n`; // 分隔線稍微縮短一點，配合精簡風格
+  textContent += `------------------\n`; 
 
-  LAST_LOADED_USERS.forEach((u, index) => {
+LAST_LOADED_USERS.forEach((u, index) => {
     const name = u.name || u.Nickname;
-    const count = u.attendees || u.Attendees_Count;
-    // 將來賓名單中的逗號換成斜線，視覺較整潔
+    const count = parseInt(u.attendees || u.Attendees_Count || 1);
     const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
 
-    // --- 修改重點開始 ---
-    // 舊格式：
-    // textContent += `${index + 1}. 報名者：${name}\n`;
-    // textContent += `   人數總計：${count} 人\n`;
+    // --- 修改重點：將序號改為兩位數並補零 ---
+    // (index + 1) 是從 1 開始計算，.toString().padStart(2, '0') 會把 1 變成 01
+    const displayIndex = (index + 1).toString().padStart(2, '0');
     
-    // 新格式： 1. 名字*人數
-    textContent += `${index + 1}. ${name}*${count}\n`;
+    let lineText = `${displayIndex}. ${name}`;
+    
+    // 只有人數大於 1 時才加上 *數量
+    if (count > 1) {
+      lineText += `*${count}`;
+    }
+    
+    textContent += lineText + `\n`;
+    // ------------------------------------
 
-    // 如果有來賓，才顯示第二行
+    if(guests) { 
+      // 來賓的縮排也稍微調整，對齊兩位數的序號
+      textContent += `    來賓：${guests}\n`; 
+    }
+  });
+    
+    textContent += lineText + `\n`;
+    // ----------------
+
+    // 顯示來賓 (維持不變)
     if(guests) { 
       textContent += `   來賓：${guests}\n`; 
     }
-    // 移除原本每個人之間多餘的空行 textContent += `\n`; 讓版面更緊湊
-    // --- 修改重點結束 ---
   });
 
   textContent += `------------------\n`;
   textContent += `📊 總計：${totalDisplay} 人\n`;
   textContent += `🔗 報名：${registrationUrl}\n`;
 
-  // 3. 執行複製邏輯 (這部分維持不變)
+  // 3. 執行複製邏輯
   const fallbackCopyTextToClipboard = (text) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
