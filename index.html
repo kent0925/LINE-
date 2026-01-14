@@ -504,10 +504,19 @@
                 <p>👤 <strong>主辦者：</strong><span id="info-creator"></span></p>
                 <p>🕒 <strong>活動時間：</strong><span id="info-time"></span></p>
                 <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
-                <p>📍 <strong>地點：</strong><span id="info-location"></span>
-                    <a id="info-map-link" href="#" target="_blank"
-                        style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a>
-                </p>
+                <div style="display:flex; align-items: flex-start; margin: 12px 0;">
+                    <span style="font-size:1.1rem; margin-right:8px; line-height:1.4;">📍</span>
+                    <div style="flex:1;">
+                        <div style="margin-bottom:8px; line-height:1.5;">
+                            <strong style="color:var(--text-main); margin-right:4px;">地點：</strong>
+                            <span id="info-location" style="color:var(--text-main);"></span>
+                        </div>
+                        <a id="info-map-link" href="#" target="_blank"
+                            style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#007AFF; padding:10px 16px; border-radius:12px; text-decoration:none; font-size:0.9rem; font-weight:600; border:1px solid #bfdbfe; transition:all 0.2s;">
+                            <span>🗺️</span> 開啟 Google Maps
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
