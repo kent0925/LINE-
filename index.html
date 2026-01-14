@@ -512,8 +512,6 @@ function copyDataToClipboard() {
   const eventTime = document.getElementById('info-time').textContent || '--';
   const venue = document.getElementById('info-venue-name').textContent || '--';
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
-  
-  // 自動生成報名網址
   const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
 
   // 2. 組合文字內容
@@ -523,39 +521,29 @@ function copyDataToClipboard() {
   textContent += `📍 地點：${venue}\n`;
   textContent += `------------------\n`; 
 
-LAST_LOADED_USERS.forEach((u, index) => {
+  // --- 遍歷名單 ---
+  LAST_LOADED_USERS.forEach((u, index) => {
     const name = u.name || u.Nickname;
     const count = parseInt(u.attendees || u.Attendees_Count || 1);
     const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
 
-    // --- 修改重點：將序號改為兩位數並補零 ---
-    // (index + 1) 是從 1 開始計算，.toString().padStart(2, '0') 會把 1 變成 01
+    // 序號補零 (例如 01, 02...)
     const displayIndex = (index + 1).toString().padStart(2, '0');
     
-    let lineText = `${displayIndex}. ${name}`;
-    
     // 只有人數大於 1 時才加上 *數量
+    let lineText = `${displayIndex}. ${name}`;
     if (count > 1) {
       lineText += `*${count}`;
     }
     
     textContent += lineText + `\n`;
-    // ------------------------------------
 
+    // 顯示來賓
     if(guests) { 
-      // 來賓的縮排也稍微調整，對齊兩位數的序號
       textContent += `    來賓：${guests}\n`; 
     }
-  });
-    
-    textContent += lineText + `\n`;
-    // ----------------
-
-    // 顯示來賓 (維持不變)
-    if(guests) { 
-      textContent += `   來賓：${guests}\n`; 
-    }
-  }
+  }); 
+  // --- 遍歷結束 ---
 
   textContent += `------------------\n`;
   textContent += `📊 總計：${totalDisplay} 人\n`;
@@ -571,7 +559,7 @@ LAST_LOADED_USERS.forEach((u, index) => {
     textArea.select();
     try {
       const successful = document.execCommand('copy');
-      if(successful) alert("✅ 名單已複製！");
+      if(successful) alert("✅ 名單已複製到剪貼簿！");
     } catch (err) {
       alert("❌ 複製失敗，請手動全選內容。");
     }
@@ -580,13 +568,13 @@ LAST_LOADED_USERS.forEach((u, index) => {
 
   if (!navigator.clipboard) {
     fallbackCopyTextToClipboard(textContent);
-    return;
+  } else {
+    navigator.clipboard.writeText(textContent).then(() => {
+      alert("✅ 名單已複製到剪貼簿！");
+    }, (err) => {
+      fallbackCopyTextToClipboard(textContent);
+    });
   }
-  navigator.clipboard.writeText(textContent).then(() => {
-    alert("✅ 名單已複製！");
-  }, (err) => {
-    fallbackCopyTextToClipboard(textContent);
-  });
 }
 
 function updateButtons(userStatus){
