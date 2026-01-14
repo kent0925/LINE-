@@ -95,21 +95,35 @@
             border-radius: 4px;
         }
 
+        /* Updated Card Styling for Merged View */
         .info-card,
         .form-section,
         .stats-section {
-            margin-bottom: 24px;
+            margin-bottom: 0;
             padding: 24px;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .stats-section {
+            border-bottom: none;
+        }
+
+        #merged-content-card {
             background: #ffffff;
             border-radius: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
             border: 1px solid rgba(0, 0, 0, 0.03);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 24px;
+            overflow: hidden;
+            /* Ensure children don't overflow rounded corners */
         }
 
-        .info-card:hover,
-        .form-section:hover,
-        .stats-section:hover {
+        #merged-content-card:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-soft);
         }
@@ -497,60 +511,63 @@
             <div id="event-button-container" class="event-grid"></div>
         </div>
 
-        <div id="activity-info" class="info-card" style="display:none;">
-            <h2 id="info-title">活動資訊</h2>
-            <div style="font-size: 0.95rem; color: var(--text-sub);">
-                <p>👤 <strong>主辦：</strong><span id="info-creator"></span></p>
-                <p>🕒 <strong>時間：</strong><span id="info-time"></span></p>
-                <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
-                <p>📍 <strong>地點：</strong><span id="info-location"></span></p>
+        <!-- Merged Main Content Card -->
+        <div id="merged-content-card" style="display:none;">
+            <div id="activity-info" class="info-card" style="display:block;">
+                <h2 id="info-title">活動資訊</h2>
+                <div style="font-size: 0.95rem; color: var(--text-sub);">
+                    <p>👤 <strong>主辦：</strong><span id="info-creator"></span></p>
+                    <p>🕒 <strong>時間：</strong><span id="info-time"></span></p>
+                    <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
+                    <p>📍 <strong>地點：</strong><span id="info-location"></span></p>
 
-                <div style="margin-top: 12px; margin-left: 4px;">
-                    <a id="info-map-link" href="#" target="_blank"
-                        style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#007AFF; padding:10px 20px; border-radius:12px; text-decoration:none; font-size:0.9rem; font-weight:600; border:1px solid #bfdbfe; transition:all 0.2s;">
-                        <span>🗺️</span> 開啟 Google Maps
-                    </a>
+                    <div style="margin-top: 12px; margin-left: 4px;">
+                        <a id="info-map-link" href="#" target="_blank"
+                            style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#007AFF; padding:10px 20px; border-radius:12px; text-decoration:none; font-size:0.9rem; font-weight:600; border:1px solid #bfdbfe; transition:all 0.2s;">
+                            <span>🗺️</span> 開啟 Google Maps
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div id="registration-form" class="form-section" style="display:none;">
-        <h2>報名資料</h2>
-        <p style="background:#f1f5f9; padding:12px 16px; border-radius:12px; font-size:0.95rem; margin-top:0;">
-            <strong>姓名：</strong> <span id="line-nickname" style="color:var(--text-main); font-weight:700;">載入中...</span>
-        </p>
+            <div id="registration-form" class="form-section" style="display:block;">
+                <strong>姓名：</strong> <span id="line-nickname"
+                    style="color:var(--text-main); font-weight:700;">載入中...</span>
+                </p>
 
-        <label for="attendees-count">本人/家屬人數</label>
-        <select id="attendees-count"></select>
+                <label for="attendees-count">本人/家屬人數</label>
+                <select id="attendees-count"></select>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
-            <label style="margin:0;">來賓及人數</label>
-            <button type="button" onclick="addGuestInput()" class="btn-export"
-                style="background:var(--primary); box-shadow: 0 4px 6px rgba(6, 199, 85, 0.2);">+
-                新增來賓</button>
-        </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
+                    <label style="margin:0;">來賓及人數</label>
+                    <button type="button" onclick="addGuestInput()" class="btn-export"
+                        style="background:var(--primary); box-shadow: 0 4px 6px rgba(6, 199, 85, 0.2);">+
+                        新增來賓</button>
+                </div>
 
-        <div id="guest-inputs-container" style="margin-top:10px;"></div>
+                <div id="guest-inputs-container" style="margin-top:10px;"></div>
 
-        <div id="form-actions">
-            <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
-            <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
-            <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
-        </div>
+                <div id="form-actions">
+                    <button id="btn-register" class="btn btn-register"
+                        onclick="submitRegistration('register')">提交報名</button>
+                    <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
+                    <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
+                </div>
 
-        <div id="form-message" class="message" style="display:none;"></div>
-    </div>
+                <div id="form-message" class="message" style="display:none;"></div>
+            </div>
 
-    <div id="statistics" class="stats-section" style="display:none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h2 style="margin:0;">報名動態</h2>
-            <button id="btn-export" class="btn-export" onclick="copyDataToClipboard()">📋 複製報名名單</button>
-        </div>
-        <p>目前報名：<strong style="color:var(--primary); font-size: 1.25rem;"><span id="total-attendees">0</span></strong> 人
-        </p>
-        <ul id="registered-list" class="stats-list"></ul>
-    </div>
+            <div id="statistics" class="stats-section" style="display:block;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin:0;">報名動態</h2>
+                    <button id="btn-export" class="btn-export" onclick="copyDataToClipboard()">📋 複製報名名單</button>
+                </div>
+                <p>目前報名：<strong style="color:var(--primary); font-size: 1.25rem;"><span
+                            id="total-attendees">0</span></strong> 人
+                </p>
+                <ul id="registered-list" class="stats-list"></ul>
+            </div>
+        </div> <!-- End of Merged Card -->
     </div>
 
     <script>
@@ -638,9 +655,15 @@
             const ev = ALL_EVENTS.find(e => e.EventID === eventId);
             if (!ev) return;
             CURRENT_EVENT_ID = eventId;
+
+            // Show the merged card wrapper
+            document.getElementById('merged-content-card').style.display = 'block';
+
+            // Ensure internal sections are visible (though they default to block in new HTML structure, we keep this for safety or reset)
             document.getElementById('activity-info').style.display = 'block';
             document.getElementById('registration-form').style.display = 'block';
             document.getElementById('statistics').style.display = 'block';
+
             document.getElementById('info-title').textContent = ev.Title;
             document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
             document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
@@ -650,7 +673,9 @@
             document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
             updateButtons(ev.UserStatus);
             loadStatsList(eventId);
-            document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
+
+            // Scroll to the card instead of just activity info
+            document.getElementById('merged-content-card').scrollIntoView({ behavior: 'smooth' });
         }
 
         let LAST_LOADED_USERS = [];
