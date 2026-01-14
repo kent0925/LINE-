@@ -1,665 +1,879 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>活動報名系統</title>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動報名系統</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-<style>
-:root {
-  --line-green: #06C755;
-  --line-dark: #05a346;
-  --bg-gradient: linear-gradient(160deg, #f0f9f1 0%, #d9e9e0 100%);
-  --accent-blue: #007AFF;
-  --accent-red: #FF3B30;
-  --glass-white: rgba(255, 255, 255, 0.9);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Poppins:wght@400;600&display=swap');
 
-body { 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif; 
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  min-height: 100vh;
-  margin: 0;
-  padding: 15px;
-  color: #1a202c;
-}
+        :root {
+            --primary: #06C755;
+            --primary-dark: #05a346;
+            --primary-soft: rgba(6, 199, 85, 0.12);
+            --accent-red: #ff4757;
+            --accent-blue: #2ed573;
+            --text-main: #2f3542;
+            --text-sub: #747d8c;
+            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --glass-white: rgba(255, 255, 255, 0.92);
+            --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-main: 24px;
+            --radius-input: 16px;
+        }
 
-.container { 
-  background: var(--glass-white);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 24px; 
-  border-radius: 24px; 
-  max-width: 480px; 
-  margin: 10px auto; 
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
+        body {
+            font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+            background: #eef2f3;
+            /* Fallback */
+            background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
 
-h1 { 
-  color: var(--line-green); 
-  text-align: center; 
-  margin: 0 0 25px 0;
-  font-size: 1.6rem;
-  font-weight: 800;
-}
+        .container {
+            background: var(--glass-white);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            width: 100%;
+            max-width: 480px;
+            padding: 32px 24px;
+            border-radius: var(--radius-main);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            margin: 10px auto;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
 
-.info-card, .form-section, .stats-section { 
-  margin-bottom: 24px; 
-  padding: 20px; 
-  background: #ffffff;
-  border: 1px solid #f0f0f0; 
-  border-radius: 18px; 
-  box-shadow: var(--shadow-sm);
-}
+        /* Decorative top line */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary);
+        }
 
-h2 {
-  font-size: 1.1rem;
-  margin: 0 0 15px 0;
-  color: #2d3748;
-  display: flex;
-  align-items: center;
-}
+        h1 {
+            color: var(--text-main);
+            text-align: center;
+            margin: 10px 0 30px 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
 
-h2::before {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 18px;
-  background: var(--line-green);
-  margin-right: 10px;
-  border-radius: 10px;
-}
+        h2 {
+            font-size: 1.15rem;
+            margin: 0 0 16px 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
 
-.event-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-top: 10px;
-}
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 20px;
+            background: var(--primary);
+            margin-right: 12px;
+            border-radius: 4px;
+        }
 
-.event-card {
-  background: #ffffff;
-  border: 2px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 18px 10px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 80px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-}
+        .info-card,
+        .form-section,
+        .stats-section {
+            margin-bottom: 24px;
+            padding: 24px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-.event-card:active {
-  transform: scale(0.92);
-}
+        .info-card:hover,
+        .form-section:hover,
+        .stats-section:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-soft);
+        }
 
-.event-card.selected {
-  border-color: var(--line-green);
-  background-color: #ffffff;
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px -8px rgba(6, 199, 85, 0.4);
-}
+        /* Grid Layout for Events */
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 12px;
+        }
 
-.event-card.selected .event-title {
-  color: var(--line-green);
-}
+        .event-card {
+            background: #fff;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 90px;
+        }
 
-.event-card .reg-badge {
-  position: absolute;
-  top: -10px;
-  right: -5px;
-  background: var(--line-green);
-  color: white;
-  font-size: 0.7rem;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-weight: 800;
-  box-shadow: 0 4px 8px rgba(6, 199, 85, 0.3);
-  z-index: 5;
-}
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
 
-.event-card .event-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 4px;
-}
+        .event-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-soft);
+            box-shadow: 0 8px 16px rgba(6, 199, 85, 0.2);
+            transform: translateY(-3px);
+        }
 
-.event-card .event-date {
-  font-size: 0.8rem;
-  color: #718096;
-}
+        .event-card .reg-badge {
+            position: absolute;
+            top: -10px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(6, 199, 85, 0.4);
+            z-index: 2;
+        }
 
-label {
-  display: block; 
-  margin: 15px 0 6px 4px; 
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #4a5568;
-}
+        .event-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
 
-input[type="text"], select, textarea {
-  width: 100%; 
-  padding: 12px 16px; 
-  border: 1.5px solid #e2e8f0; 
-  border-radius: 12px; 
-  box-sizing: border-box;
-  font-size: 1rem;
-  background-color: #f8fafc;
-  transition: all 0.2s;
-}
+        .event-date {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            background: #f1f2f6;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
 
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--line-green);
-  background-color: #fff;
-  box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.1);
-}
+        /* Inputs */
+        label {
+            display: block;
+            margin: 18px 0 8px 4px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
 
-.btn {
-  padding: 14px 20px; 
-  border: none; 
-  border-radius: 14px; 
-  cursor: pointer; 
-  font-weight: 700; 
-  font-size: 1rem;
-  transition: all 0.2s;
-  margin: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-}
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #edf2f7;
+            border-radius: var(--radius-input);
+            font-size: 1rem;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
 
-.btn:active { transform: scale(0.96); }
-.btn:disabled { background: #cbd5e0; color: #718096; cursor: not-allowed; }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            background-color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.1);
+        }
 
-.btn-register { background: var(--line-green); color: white; }
-.btn-cancel { background: #fee2e2; color: var(--accent-red); }
-.btn-edit { background: #e0f2fe; color: var(--accent-blue); }
+        /* Buttons */
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius-input);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
 
-.btn-export {
-  background: #4a5568;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-.btn-export:active { transform: scale(0.95); }
+        .btn:active {
+            transform: scale(0.97);
+        }
 
-#form-actions { display: flex; gap: 4px; margin-top: 20px; }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
 
-.stats-list {
-  list-style: none;
-  padding: 0; 
-  margin: 10px 0 0 0;
-  max-height: 250px; 
-  overflow-y: auto; 
-}
+        #form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
 
-.stats-list li {
-  padding: 12px 4px; 
-  border-bottom: 1px solid #f7fafc;
-  font-size: 0.95rem;
-  display: flex;
-  flex-direction: column;
-}
+        #form-actions .btn {
+            width: 100%;
+        }
 
-.message {
-  padding: 14px; 
-  margin-top: 20px; 
-  border-radius: 12px; 
-  text-align: center; 
-  font-weight: 600;
-  animation: slideUp 0.4s ease-out;
-}
+        /* Make submit button full width if it's the only one, handling via JS logic usually, but here flex/grid helps */
+        #form-actions .btn-register {
+            grid-column: span 2;
+        }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 16px rgba(6, 199, 85, 0.25);
+        }
 
-.success { background-color: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
-.error { background-color: #fff5f5; color: #9b2c2c; border: 1px solid #fed7d7; }
+        .btn-register:hover {
+            box-shadow: 0 12px 20px rgba(6, 199, 85, 0.35);
+            filter: brightness(1.05);
+        }
 
-.loading { text-align: center; padding: 60px 20px; }
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--line-green);
-  border-radius: 50%;
-  margin: 0 auto 15px;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn-cancel {
+            background: #ffe5e5;
+            color: var(--accent-red);
+        }
 
-.guest-input-group { 
-  display: flex; 
-  gap: 8px; 
-  margin-bottom: 10px; 
-  width: 100%;
-  align-items: center;
-}
-.guest-name-item {
-  flex: 2;
-}
-.guest-count-item {
-  flex: 1;
-  min-width: 80px;
-}
-.btn-del-guest { 
-  background: #fee2e2; 
-  color: var(--accent-red); 
-  border: 1px solid #fed7d7; 
-  border-radius: 12px; 
-  padding: 0 15px; 
-  cursor: pointer;
-  font-weight: bold;
-  height: 42px;
-}
-</style>
+        .btn-edit {
+            background: #e3f9ff;
+            color: #0984e3;
+        }
+
+        .btn-export {
+            background: #2f3542;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-export:hover {
+            background: #57606f;
+            transform: translateY(-1px);
+        }
+
+        /* Stats List */
+        .stats-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+            max-height: 300px;
+            overflow-y: auto;
+            /* Scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f1f5f9;
+        }
+
+        .stats-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stats-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .stats-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .stats-list li {
+            padding: 12px 8px;
+            border-bottom: 1px dashed #e2e8f0;
+            /* Dashed line for a notebook feel */
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.2s;
+        }
+
+        .stats-list li:last-child {
+            border-bottom: none;
+        }
+
+        .stats-list li:hover {
+            background: #fafafa;
+        }
+
+        /* Messages */
+        .message {
+            padding: 16px;
+            margin-top: 24px;
+            border-radius: 16px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideUp 0.4s ease-out;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success {
+            background-color: #e6fffa;
+            color: #2c7a7b;
+            border: 1px solid #b2f5ea;
+        }
+
+        .error {
+            background-color: #fff5f5;
+            color: #c53030;
+            border: 1px solid #fed7d7;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            padding: 80px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #edf2f7;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            margin-bottom: 20px;
+            animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+            /* Playful spin */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Guest Input Group */
+        .guest-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .guest-name-item {
+            flex: 2;
+        }
+
+        .guest-count-item {
+            flex: 0.8;
+            min-width: 70px;
+        }
+
+        .btn-del-guest {
+            width: 46px;
+            height: 46px;
+            /* Matches input height roughly */
+            background: #fff;
+            color: var(--accent-red);
+            border: 2px solid #fed7d7;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .btn-del-guest:hover {
+            background: #fff5f5;
+            border-color: var(--accent-red);
+        }
+
+        /* Activity Info Styling Enhancement */
+        #activity-info p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            /* Align icon with text */
+            line-height: 1.5;
+        }
+
+        #activity-info strong {
+            margin-right: 6px;
+            color: var(--text-main);
+            min-width: 80px;
+            /* Align content */
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="container">
-  <h1>活動報名系統</h1>
+    <div class="container">
+        <h1>活動報名系統</h1>
 
-  <div id="loading-spinner" class="loading">
-    <div class="spinner"></div>
-    <p style="color:#718096;">讀取資料中...</p>
-  </div>
+        <div id="loading-spinner" class="loading">
+            <div class="spinner"></div>
+            <p style="color:var(--text-sub);">讀取資料中...</p>
+        </div>
 
-  <div id="event-selection" class="form-section" style="display:none;">
-    <h2>選擇活動場次</h2>
-    <div id="event-button-container" class="event-grid"></div>
-  </div>
+        <div id="event-selection" class="form-section" style="display:none;">
+            <h2>選擇活動場次</h2>
+            <div id="event-button-container" class="event-grid"></div>
+        </div>
 
-  <div id="activity-info" class="info-card" style="display:none;">
-    <h2 id="info-title">活動資訊</h2>
-    <div style="font-size: 0.95rem; color: #4a5568;">
-      <p>👤 <strong>主辦者：</strong><span id="info-creator"></span></p>
-      <p>🕒 <strong>活動時間：</strong><span id="info-time"></span></p>
-      <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
-      <p>📍 <strong>地點：</strong><span id="info-location"></span> 
-         <a id="info-map-link" href="#" target="_blank" style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a></p>
+        <div id="activity-info" class="info-card" style="display:none;">
+            <h2 id="info-title">活動資訊</h2>
+            <div style="font-size: 0.95rem; color: var(--text-sub);">
+                <p>👤 <strong>主辦者：</strong><span id="info-creator"></span></p>
+                <p>🕒 <strong>活動時間：</strong><span id="info-time"></span></p>
+                <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
+                <p>📍 <strong>地點：</strong><span id="info-location"></span>
+                    <a id="info-map-link" href="#" target="_blank"
+                        style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a>
+                </p>
+            </div>
+        </div>
+
+        <div id="registration-form" class="form-section" style="display:none;">
+            <h2>報名資料</h2>
+            <p style="background:#f1f5f9; padding:12px 16px; border-radius:12px; font-size:0.95rem; margin-top:0;">
+                <strong>姓名：</strong> <span id="line-nickname"
+                    style="color:var(--text-main); font-weight:700;">載入中...</span>
+            </p>
+
+            <label for="attendees-count">本人/家屬人數</label>
+            <select id="attendees-count"></select>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
+                <label style="margin:0;">來賓姓名及其人數</label>
+                <button type="button" onclick="addGuestInput()" class="btn-export"
+                    style="background:var(--primary); box-shadow: 0 4px 6px rgba(6, 199, 85, 0.2);">+
+                    新增來賓</button>
+            </div>
+
+            <div id="guest-inputs-container" style="margin-top:10px;"></div>
+
+            <div id="form-actions">
+                <button id="btn-register" class="btn btn-register"
+                    onclick="submitRegistration('register')">提交報名</button>
+                <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
+                <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
+            </div>
+
+            <div id="form-message" class="message" style="display:none;"></div>
+        </div>
+
+        <div id="statistics" class="stats-section" style="display:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2 style="margin:0;">報名動態</h2>
+                <button id="btn-export" class="btn-export" onclick="copyDataToClipboard()">📋 複製報名名單</button>
+            </div>
+            <p>目前報名：<strong style="color:var(--primary); font-size: 1.25rem;"><span
+                        id="total-attendees">0</span></strong> 人</p>
+            <ul id="registered-list" class="stats-list"></ul>
+        </div>
     </div>
-  </div>
 
-  <div id="registration-form" class="form-section" style="display:none;">
-    <h2>報名資料</h2>
-    <p style="background:#f1f5f9; padding:10px 15px; border-radius:10px; font-size:0.9rem;">
-      <strong>姓名：</strong> <span id="line-nickname" style="color:var(--line-dark); font-weight:bold;">載入中...</span>
-    </p>
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
+        const LIFF_ID = '2008678090-aXTesgDK';
+        let LINE_UID = '', LINE_NICKNAME = '', CURRENT_EVENT_ID = null, ALL_EVENTS = [];
 
-    <label for="attendees-count">本人/家屬人數</label>
-    <select id="attendees-count"></select>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px;">
-      <label style="margin:0;">來賓姓名及其人數</label>
-      <button type="button" onclick="addGuestInput()" style="background:var(--line-green); color:white; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold;">+ 新增來賓</button>
-    </div>
-    
-    <div id="guest-inputs-container" style="margin-top:10px;"></div>
-    
-    <div id="form-actions">
-      <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
-      <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
-      <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
-    </div>
-
-    <div id="form-message" class="message" style="display:none;"></div>
-  </div>
-
-  <div id="statistics" class="stats-section" style="display:none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-      <h2 style="margin:0;">報名動態</h2>
-      <button id="btn-export" class="btn-export" onclick="copyDataToClipboard()">📋 複製報名名單</button>
-    </div>
-    <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
-    <ul id="registered-list" class="stats-list"></ul>
-  </div>
-</div>
-
-<script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
-const LIFF_ID='2008678090-aXTesgDK';
-let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
-
-function addGuestInput(val = '', count = 1) {
-  const container = document.getElementById('guest-inputs-container');
-  const div = document.createElement('div');
-  div.className = 'guest-input-group';
-  div.innerHTML = `
+        function addGuestInput(val = '', count = 1) {
+            const container = document.getElementById('guest-inputs-container');
+            const div = document.createElement('div');
+            div.className = 'guest-input-group';
+            div.innerHTML = `
     <input type="text" class="guest-name-item" value="${val}" placeholder="輸入來賓姓名">
     <select class="guest-count-item">
-      ${[1,2,3,4,5,6,7,8,9,10].map(i => `<option value="${i}" ${i==count?'selected':''}>+${i}</option>`).join('')}
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => `<option value="${i}" ${i == count ? 'selected' : ''}>+${i}</option>`).join('')}
     </select>
     <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
   `;
-  container.appendChild(div);
-}
+            container.appendChild(div);
+        }
 
-async function initializeLiff(){
-  try {
-    const countSel = document.getElementById('attendees-count');
-    countSel.innerHTML='';
-    for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i} 人</option>`;}
+        async function initializeLiff() {
+            try {
+                const countSel = document.getElementById('attendees-count');
+                countSel.innerHTML = '';
+                for (let i = 1; i <= 10; i++) { countSel.innerHTML += `<option value="${i}">${i} 人</option>`; }
 
-    await liff.init({ liffId: LIFF_ID });
-    if(!liff.isLoggedIn()){ liff.login(); return; }
-    const profile = await liff.getProfile();
-    LINE_UID = profile.userId;
-    LINE_NICKNAME = profile.displayName;
-    document.getElementById('line-nickname').textContent = LINE_NICKNAME;
-    
-    await loadEventsList();
-  } catch(err){
-    alert('LIFF 初始化失敗');
-  }
-}
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) { liff.login(); return; }
+                const profile = await liff.getProfile();
+                LINE_UID = profile.userId;
+                LINE_NICKNAME = profile.displayName;
+                document.getElementById('line-nickname').textContent = LINE_NICKNAME;
 
-function formatLocalTime(iso){
-  if(!iso) return "--";
-  const d = new Date(iso);
-  if(isNaN(d.getTime())) return iso;
-  const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-  const dayName = weekDays[d.getDay()]; 
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const date = d.getDate();
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
-}
+                await loadEventsList();
+            } catch (err) {
+                alert('LIFF 初始化失敗');
+            }
+        }
 
-async function loadEventsList(){
-  try {
-    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-    const data = await res.json();
-    ALL_EVENTS = data.events || [];
-    const container = document.getElementById('event-button-container');
-    container.innerHTML = '';
-    ALL_EVENTS.forEach(ev => {
-      const card = document.createElement('div');
-      card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
-      let html = '';
-      if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
-      html += `<span class="event-title">${ev.Title}</span>`;
-      html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
-      card.innerHTML = html;
-      card.onclick = function() {
-        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
-        this.classList.add('selected');
-        selectEvent(ev.EventID);
-      };
-      container.appendChild(card);
-    });
-    document.getElementById('loading-spinner').style.display='none';
-    document.getElementById('event-selection').style.display='block';
-  } catch(err){
-    console.error('載入失敗:', err);
-  }
-}
+        function formatLocalTime(iso) {
+            if (!iso) return "--";
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+            const dayName = weekDays[d.getDay()];
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const date = d.getDate();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
+        }
 
-function selectEvent(eventId){
-  const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
-  if(!ev) return;
-  CURRENT_EVENT_ID = eventId;
-  document.getElementById('activity-info').style.display='block';
-  document.getElementById('registration-form').style.display='block';
-  document.getElementById('statistics').style.display='block';
-  document.getElementById('info-title').textContent = ev.Title;
-  document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
-  document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
-  document.getElementById('info-venue-name').textContent = ev.VenueName;
-  document.getElementById('info-location').textContent = ev.Address;
-  document.getElementById('info-map-link').href = ev.MapUrl || '#';
-  document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
-  updateButtons(ev.UserStatus);
-  loadStatsList(eventId); 
-  document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
-}
+        async function loadEventsList() {
+            try {
+                const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+                const data = await res.json();
+                ALL_EVENTS = data.events || [];
+                const container = document.getElementById('event-button-container');
+                container.innerHTML = '';
+                ALL_EVENTS.forEach(ev => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
+                    let html = '';
+                    if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
+                    html += `<span class="event-title">${ev.Title}</span>`;
+                    html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+                    card.innerHTML = html;
+                    card.onclick = function () {
+                        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectEvent(ev.EventID);
+                    };
+                    container.appendChild(card);
+                });
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('event-selection').style.display = 'block';
+            } catch (err) {
+                console.error('載入失敗:', err);
+            }
+        }
 
-let LAST_LOADED_USERS = []; 
+        function selectEvent(eventId) {
+            const ev = ALL_EVENTS.find(e => e.EventID === eventId);
+            if (!ev) return;
+            CURRENT_EVENT_ID = eventId;
+            document.getElementById('activity-info').style.display = 'block';
+            document.getElementById('registration-form').style.display = 'block';
+            document.getElementById('statistics').style.display = 'block';
+            document.getElementById('info-title').textContent = ev.Title;
+            document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
+            document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
+            document.getElementById('info-venue-name').textContent = ev.VenueName;
+            document.getElementById('info-location').textContent = ev.Address;
+            document.getElementById('info-map-link').href = ev.MapUrl || '#';
+            document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
+            updateButtons(ev.UserStatus);
+            loadStatsList(eventId);
+            document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
+        }
 
-async function loadStatsList(eventId){
-  const ul = document.getElementById('registered-list');
-  try {
-    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-    const data = await res.json();
-    ul.innerHTML = '';
-    const users = data.registeredUsers || [];
-    LAST_LOADED_USERS = users; 
+        let LAST_LOADED_USERS = [];
 
-    if(users.length === 0){
-      ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
-      return;
-    }
+        async function loadStatsList(eventId) {
+            const ul = document.getElementById('registered-list');
+            try {
+                const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+                const data = await res.json();
+                ul.innerHTML = '';
+                const users = data.registeredUsers || [];
+                LAST_LOADED_USERS = users;
 
-    users.forEach((u, index) => {
-      const name = u.name || u.Nickname;
-      const totalCount = parseInt(u.attendees || u.Attendees_Count || 1);
-      const rawGuests = u.guestNames || u.Guest_Names || "";
-      
-      const displayIndex = (index + 1).toString().padStart(2, '0');
+                if (users.length === 0) {
+                    ul.innerHTML = '<li style="justify-content:center; color:var(--text-sub); opacity:0.6;">尚無人報名</li>';
+                    return;
+                }
 
-      // 主報名者顯示邏輯
-      let nameLine = `${displayIndex}. ${name}`;
-      if (totalCount > 1) {
-        nameLine += `*${totalCount}`;
-      }
+                users.forEach((u, index) => {
+                    const name = u.name || u.Nickname;
+                    const totalCount = parseInt(u.attendees || u.Attendees_Count || 1);
+                    const rawGuests = u.guestNames || u.Guest_Names || "";
 
-      // 來賓顯示邏輯 (1人不顯示數量，超過1人顯示 *n)
-      let guestText = "";
-      if(rawGuests) {
-        const guestArray = rawGuests.split(',').map(g => {
-          const match = g.match(/(.+)\(\+(\d+)\)/);
-          if (match) {
-            const gName = match[1].trim();
-            const gCount = parseInt(match[2]);
-            return gCount > 1 ? `${gName}*${gCount}` : gName;
-          }
-          return g.trim();
-        });
-        
-        // 設定來賓縮排，且與上方主姓名保持緊湊
-        guestText = `<div style="margin-left: 25px; color: #718096; font-size: 0.9rem;">
+                    const displayIndex = (index + 1).toString().padStart(2, '0');
+
+                    // 主報名者顯示邏輯
+                    let nameLine = `${displayIndex}. ${name}`;
+                    if (totalCount > 1) {
+                        nameLine += `*${totalCount}`;
+                    }
+
+                    // 來賓顯示邏輯 (1人不顯示數量，超過1人顯示 *n)
+                    let guestText = "";
+                    if (rawGuests) {
+                        const guestArray = rawGuests.split(',').map(g => {
+                            const match = g.match(/(.+)\(\+(\d+)\)/);
+                            if (match) {
+                                const gName = match[1].trim();
+                                const gCount = parseInt(match[2]);
+                                return gCount > 1 ? `${gName}*${gCount}` : gName;
+                            }
+                            return g.trim();
+                        });
+
+                        // 設定來賓縮排，且與上方主姓名保持緊湊
+                        guestText = `<div style="margin-left: 25px; color: var(--text-sub); font-size: 0.9rem;">
                        來賓：${guestArray.join(' / ')}
                      </div>`;
-      }
+                    }
 
-      const li = document.createElement('li');
-      // 關鍵改動：將 margin-bottom 設為 0，移除行與行之間的間隔
-      li.style.cssText = "margin-bottom: 0; padding: 2px 0; border-bottom: none; list-style: none;";
-      li.innerHTML = `
-        <div style="font-size: 1rem; color: #2d3748; line-height: 1.4;">
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+        <div style="font-size: 1rem; color: var(--text-main); line-height: 1.4;">
           ${nameLine}
         </div>
         ${guestText}
       `;
-      ul.appendChild(li);
-    });
-  } catch(err){
-    ul.innerHTML = '<li style="text-align:center;">名單載入失敗</li>';
-  }
-}
-
-// 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：隱藏 *1)
-function copyDataToClipboard() {
-  if (LAST_LOADED_USERS.length === 0) {
-    alert("目前無名單可匯出");
-    return;
-  }
-
-  // 1. 從 DOM 抓取資訊
-  const eventTitle = document.getElementById('info-title').textContent || '活動報名';
-  const creator = document.getElementById('info-creator').textContent || '--';
-  const eventTime = document.getElementById('info-time').textContent || '--';
-  const venue = document.getElementById('info-venue-name').textContent || '--';
-  const locText = document.getElementById('info-location').textContent || '--'; //
-  const totalDisplay = document.getElementById('total-attendees').textContent || '0';
-  const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
-
-  // 2. 組合文字內容
-  let textContent = `【${eventTitle}】\n`;
-  textContent += `👤 爐主：${creator}\n`;
-  textContent += `🕒 時間：${eventTime}\n`;
-  textContent += `📍 地點：${venue}\n`;
-  textContent += `🏠 地址：${locText}\n`;
-  textContent += `------------------\n`; 
-
-  // --- 遍歷名單 ---
-  LAST_LOADED_USERS.forEach((u, index) => {
-    const name = u.name || u.Nickname;
-    const count = parseInt(u.attendees || u.Attendees_Count || 1);
-    const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
-
-    // 序號補零 (例如 01, 02...)
-    const displayIndex = (index + 1).toString().padStart(2, '0');
-    
-    // 只有人數大於 1 時才加上 *數量
-    let lineText = `${displayIndex}. ${name}`;
-    if (count > 1) {
-      lineText += `*${count}`;
-    }
-    
-    textContent += lineText + `\n`;
-
-    // 顯示來賓
-    if(guests) { 
-     textContent += `   來賓：${guests}\n`;
-    }
-  }); 
-  // --- 遍歷結束 ---
-
-  textContent += `------------------\n`;
-  textContent += `📊 總計：${totalDisplay} 人\n`;
-  textContent += `🔗 報名：${registrationUrl}\n`;
-
-  // 3. 執行複製邏輯
-  const fallbackCopyTextToClipboard = (text) => {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed"; 
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      const successful = document.execCommand('copy');
-      if(successful) alert("✅ 名單已複製到剪貼簿！");
-    } catch (err) {
-      alert("❌ 複製失敗，請手動全選內容。");
-    }
-    document.body.removeChild(textArea);
-  }
-
-  if (!navigator.clipboard) {
-    fallbackCopyTextToClipboard(textContent);
-  } else {
-    navigator.clipboard.writeText(textContent).then(() => {
-      alert("✅ 名單已複製到剪貼簿！");
-    }, (err) => {
-      fallbackCopyTextToClipboard(textContent);
-    });
-  }
-}
-
-function updateButtons(userStatus){
-  document.getElementById('guest-inputs-container').innerHTML = '';
-  const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
-  if(isRegistered){
-    document.getElementById('btn-register').style.display='none';
-    document.getElementById('btn-cancel').style.display='inline-block';
-    document.getElementById('btn-edit').style.display='inline-block';
-    const total = userStatus.Attendees_Count || userStatus.attendees || 1;
-    const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
-    let guestPartTotal = 0;
-    if(namesStr) {
-      namesStr.split(',').forEach(item => {
-        const match = item.match(/(.+)\(\+(\d+)\)/);
-        if(match) {
-          const gName = match[1];
-          const gCount = parseInt(match[2]);
-          addGuestInput(gName, gCount);
-          guestPartTotal += gCount;
-        } else if(item.trim()) {
-          addGuestInput(item.trim(), 1);
-          guestPartTotal += 1;
+                    ul.appendChild(li);
+                });
+            } catch (err) {
+                ul.innerHTML = '<li style="text-align:center;">名單載入失敗</li>';
+            }
         }
-      });
-    }
-    document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
-  } else {
-    document.getElementById('btn-register').style.display='inline-block';
-    document.getElementById('btn-cancel').style.display='none';
-    document.getElementById('btn-edit').style.display='none';
-    document.getElementById('attendees-count').value = 1;
-  }
-}
 
-async function submitRegistration(action){
-  const btns = document.querySelectorAll('.btn');
-  btns.forEach(b => b.disabled = true);
-  const msg = document.getElementById('form-message');
-  msg.style.display = 'block';
-  msg.className = 'message';
-  msg.textContent = '⏳ 處理中...';
-  const guestNamesWithCount = [];
-  let totalGuestsCount = 0;
-  document.querySelectorAll('.guest-input-group').forEach(group => {
-    const name = group.querySelector('.guest-name-item').value.trim();
-    const count = parseInt(group.querySelector('.guest-count-item').value);
-    if(name) {
-      guestNamesWithCount.push(`${name}(+${count})`); 
-      totalGuestsCount += count;
-    }
-  });
-  const userCount = parseInt(document.getElementById('attendees-count').value);
-  const finalTotal = userCount + totalGuestsCount;
-  const payload = {
-    action, eventId: CURRENT_EVENT_ID, lineUid: LINE_UID,
-    lineNickname: LINE_NICKNAME, attendeesCount: finalTotal,
-    guestNames: guestNamesWithCount.join(',')
-  };
-  try {
-    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
-    const data = await res.json();
-    msg.className = data.status==='success'?'message success':'message error';
-    msg.textContent = data.message;
-    if (data.status === 'success') {
-      if (action === 'register' || action === 'cancel') {
-        setTimeout(() => { liff.closeWindow(); }, 2000);
-      } else {
-        await loadEventsList();
-        selectEvent(CURRENT_EVENT_ID);
-        btns.forEach(b => b.disabled = false);
-      }
-    } else {
-      btns.forEach(b => b.disabled = false);
-    }
-  } catch(err){
-    msg.textContent = '❌ 連線異常';
-    btns.forEach(b => b.disabled = false);
-  }
-}
+        // 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：隱藏 *1)
+        function copyDataToClipboard() {
+            if (LAST_LOADED_USERS.length === 0) {
+                alert("目前無名單可匯出");
+                return;
+            }
 
-initializeLiff();
-</script>
+            // 1. 從 DOM 抓取資訊
+            const eventTitle = document.getElementById('info-title').textContent || '活動報名';
+            const creator = document.getElementById('info-creator').textContent || '--';
+            const eventTime = document.getElementById('info-time').textContent || '--';
+            const venue = document.getElementById('info-venue-name').textContent || '--';
+            const locText = document.getElementById('info-location').textContent || '--'; //
+            const totalDisplay = document.getElementById('total-attendees').textContent || '0';
+            const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
+
+            // 2. 組合文字內容
+            let textContent = `【${eventTitle}】\n`;
+            textContent += `👤 爐主：${creator}\n`;
+            textContent += `🕒 時間：${eventTime}\n`;
+            textContent += `📍 地點：${venue}\n`;
+            textContent += `🏠 地址：${locText}\n`;
+            textContent += `------------------\n`;
+
+            // --- 遍歷名單 ---
+            LAST_LOADED_USERS.forEach((u, index) => {
+                const name = u.name || u.Nickname;
+                const count = parseInt(u.attendees || u.Attendees_Count || 1);
+                const guests = (u.guestNames || u.Guest_Names || "").replace(/,/g, " / ");
+
+                // 序號補零 (例如 01, 02...)
+                const displayIndex = (index + 1).toString().padStart(2, '0');
+
+                // 只有人數大於 1 時才加上 *數量
+                let lineText = `${displayIndex}. ${name}`;
+                if (count > 1) {
+                    lineText += `*${count}`;
+                }
+
+                textContent += lineText + `\n`;
+
+                // 顯示來賓
+                if (guests) {
+                    textContent += `   來賓：${guests}\n`;
+                }
+            });
+            // --- 遍歷結束 ---
+
+            textContent += `------------------\n`;
+            textContent += `📊 總計：${totalDisplay} 人\n`;
+            textContent += `🔗 報名：${registrationUrl}\n`;
+
+            // 3. 執行複製邏輯
+            const fallbackCopyTextToClipboard = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) alert("✅ 名單已複製到剪貼簿！");
+                } catch (err) {
+                    alert("❌ 複製失敗，請手動全選內容。");
+                }
+                document.body.removeChild(textArea);
+            }
+
+            if (!navigator.clipboard) {
+                fallbackCopyTextToClipboard(textContent);
+            } else {
+                navigator.clipboard.writeText(textContent).then(() => {
+                    alert("✅ 名單已複製到剪貼簿！");
+                }, (err) => {
+                    fallbackCopyTextToClipboard(textContent);
+                });
+            }
+        }
+
+        function updateButtons(userStatus) {
+            document.getElementById('guest-inputs-container').innerHTML = '';
+            const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
+            if (isRegistered) {
+                document.getElementById('btn-register').style.display = 'none';
+                document.getElementById('btn-cancel').style.display = 'inline-block';
+                document.getElementById('btn-edit').style.display = 'inline-block';
+                const total = userStatus.Attendees_Count || userStatus.attendees || 1;
+                const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
+                let guestPartTotal = 0;
+                if (namesStr) {
+                    namesStr.split(',').forEach(item => {
+                        const match = item.match(/(.+)\(\+(\d+)\)/);
+                        if (match) {
+                            const gName = match[1];
+                            const gCount = parseInt(match[2]);
+                            addGuestInput(gName, gCount);
+                            guestPartTotal += gCount;
+                        } else if (item.trim()) {
+                            addGuestInput(item.trim(), 1);
+                            guestPartTotal += 1;
+                        }
+                    });
+                }
+                document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
+            } else {
+                document.getElementById('btn-register').style.display = 'inline-block';
+                document.getElementById('btn-cancel').style.display = 'none';
+                document.getElementById('btn-edit').style.display = 'none';
+                document.getElementById('attendees-count').value = 1;
+            }
+        }
+
+        async function submitRegistration(action) {
+            const btns = document.querySelectorAll('.btn');
+            btns.forEach(b => b.disabled = true);
+            const msg = document.getElementById('form-message');
+            msg.style.display = 'block';
+            msg.className = 'message';
+            msg.textContent = '⏳ 處理中...';
+            const guestNamesWithCount = [];
+            let totalGuestsCount = 0;
+            document.querySelectorAll('.guest-input-group').forEach(group => {
+                const name = group.querySelector('.guest-name-item').value.trim();
+                const count = parseInt(group.querySelector('.guest-count-item').value);
+                if (name) {
+                    guestNamesWithCount.push(`${name}(+${count})`);
+                    totalGuestsCount += count;
+                }
+            });
+            const userCount = parseInt(document.getElementById('attendees-count').value);
+            const finalTotal = userCount + totalGuestsCount;
+            const payload = {
+                action, eventId: CURRENT_EVENT_ID, lineUid: LINE_UID,
+                lineNickname: LINE_NICKNAME, attendeesCount: finalTotal,
+                guestNames: guestNamesWithCount.join(',')
+            };
+            try {
+                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await res.json();
+                msg.className = data.status === 'success' ? 'message success' : 'message error';
+                msg.textContent = data.message;
+                if (data.status === 'success') {
+                    if (action === 'register' || action === 'cancel') {
+                        setTimeout(() => { liff.closeWindow(); }, 2000);
+                    } else {
+                        await loadEventsList();
+                        selectEvent(CURRENT_EVENT_ID);
+                        btns.forEach(b => b.disabled = false);
+                    }
+                } else {
+                    btns.forEach(b => b.disabled = false);
+                }
+            } catch (err) {
+                msg.textContent = '❌ 連線異常';
+                btns.forEach(b => b.disabled = false);
+            }
+        }
+
+        initializeLiff();
+    </script>
 </body>
+
 </html>
