@@ -531,6 +531,7 @@
             </div>
 
             <div id="registration-form" class="form-section" style="display:block;">
+                <p style="margin-top:0;">
                 <strong>姓名：</strong> <span id="line-nickname"
                     style="color:var(--text-main); font-weight:700;">載入中...</span>
                 </p>
@@ -880,26 +881,61 @@
             try {
                 const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await res.json();
+                
                 msg.className = data.status === 'success' ? 'message success' : 'message error';
                 msg.textContent = data.message;
+
+                // --- 補全建議位置開始 ---
                 if (data.status === 'success') {
-                    if (action === 'register' || action === 'cancel') {
-                        setTimeout(() => { liff.closeWindow(); }, 2000);
-                    } else {
-                        await loadEventsList();
-                        selectEvent(CURRENT_EVENT_ID);
-                        btns.forEach(b => b.disabled = false);
+                    // 1. 重新讀取該場次的報名名單 (更新列表)
+                    await loadStatsList(CURRENT_EVENT_ID);
+
+                    // 2. 重新計算總人數 (利用 loadStatsList 更新後的 LAST_LOADED_USERS)
+                    let newTotal = 0;
+                    if (LAST_LOADED_USERS && LAST_LOADED_USERS.length > 0) {
+                        LAST_LOADED_USERS.forEach(u => {
+                            // 相容大小寫欄位
+                            const count = parseInt(u.attendees || u.Attendees_Count || 1);
+                            newTotal += count;
+                        });
                     }
-                } else {
-                    btns.forEach(b => b.disabled = false);
+                    document.getElementById('total-attendees').textContent = newTotal;
+
+                    // 3. 根據動作更新按鈕狀態
+                    if (action === 'cancel') {
+                        // 如果是取消，狀態清空 (變成未報名狀態)
+                        updateButtons(null);
+                    } else {
+                        // 如果是報名或編輯，手動建立一個狀態物件來更新按鈕 (避免等待 API 延遲)
+                        const currentStatus = {
+                            Status: 'Registered',
+                            IsRegistered: true,
+                            attendees: userCount, // 這是表單當前選的人數
+                            guestNames: guestNamesWithCount.join(',') // 這是表單當前的來賓
+                        };
+                        updateButtons(currentStatus);
+                    }
+                    
+                    // 4. 背景重新整理活動列表 (讓外層卡片顯示"已報名"綠色標籤)
+                    loadEventsList();
                 }
+
             } catch (err) {
-                msg.textContent = '❌ 連線異常';
+                console.error('Submit Error:', err);
+                msg.className = 'message error';
+                msg.textContent = '❌ 連線異常。';
+            } finally {
+                // 無論成功失敗，最後都把按鈕解鎖
                 btns.forEach(b => b.disabled = false);
             }
         }
 
-        initializeLiff();
+        // --- 初始化入口 ---
+        // 當網頁載入完成後，執行 LIFF 初始化
+        window.onload = function() {
+            initializeLiff();
+        };
+
     </script>
 </body>
 
