@@ -511,6 +511,7 @@ function copyDataToClipboard() {
   const creator = document.getElementById('info-creator').textContent || '--';
   const eventTime = document.getElementById('info-time').textContent || '--';
   const venue = document.getElementById('info-venue-name').textContent || '--';
+  const locText = document.getElementById('info-location').textContent || '--'; //
   const totalDisplay = document.getElementById('total-attendees').textContent || '0';
   const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
 
@@ -519,7 +520,7 @@ function copyDataToClipboard() {
   textContent += `👤 爐主：${creator}\n`;
   textContent += `🕒 時間：${eventTime}\n`;
   textContent += `📍 地點：${venue}\n`;
-  textContent += `🏠 地址：${location}\n`;
+  textContent += `🏠 地址：${locText}\n`;
   textContent += `------------------\n`; 
 
   // --- 遍歷名單 ---
@@ -541,7 +542,7 @@ function copyDataToClipboard() {
 
     // 顯示來賓
     if(guests) { 
-      textContent += `    來賓：${guests}\n`; 
+     textContent += `   來賓：${guests}\n`;
     }
   }); 
   // --- 遍歷結束 ---
