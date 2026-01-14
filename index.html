@@ -461,12 +461,10 @@ async function loadStatsList(eventId){
       // 主報名者顯示邏輯
       let nameLine = `${displayIndex}. ${name}`;
       if (totalCount > 1) {
-        // 注意：這裡的 totalCount 是包含本人與所有來賓的總數
-        // 如果你希望主報名者這一行也遵循「只有本人不顯示 *1」的邏輯，目前的寫法是正確的
         nameLine += `*${totalCount}`;
       }
 
-      // 來賓顯示邏輯
+      // 來賓顯示邏輯 (1人不顯示數量，超過1人顯示 *n)
       let guestText = "";
       if(rawGuests) {
         const guestArray = rawGuests.split(',').map(g => {
@@ -479,15 +477,17 @@ async function loadStatsList(eventId){
           return g.trim();
         });
         
-        guestText = `<div style="margin-left: 25px; color: #718096; font-size: 0.9rem; margin-top: 2px;">
+        // 設定來賓縮排，且與上方主姓名保持緊湊
+        guestText = `<div style="margin-left: 25px; color: #718096; font-size: 0.9rem;">
                        來賓：${guestArray.join(' / ')}
                      </div>`;
       }
 
       const li = document.createElement('li');
-      li.style.cssText = "margin-bottom: 12px; padding: 4px 0; border-bottom: 1px solid #edf2f7;";
+      // 關鍵改動：將 margin-bottom 設為 0，移除行與行之間的間隔
+      li.style.cssText = "margin-bottom: 0; padding: 2px 0; border-bottom: none; list-style: none;";
       li.innerHTML = `
-        <div style="font-size: 1rem; color: #2d3748; font-weight: 500;">
+        <div style="font-size: 1rem; color: #2d3748; line-height: 1.4;">
           ${nameLine}
         </div>
         ${guestText}
