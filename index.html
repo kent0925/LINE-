@@ -750,6 +750,7 @@
         }
 
         // 📋 終極版複製與分享功能
+// 📋 終極版複製與分享功能 (修復 Bug 版)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
@@ -801,7 +802,7 @@
             text += `共 ${totalDisplay} 人報名\n`;
             text += `🔗 報名連結：\n${registrationUrl}`;
 
-            // 2. 定義輔助函式
+            // 2. 定義輔助函式 (內部使用)
             const fallbackCopy = (txt) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = txt;
@@ -848,10 +849,11 @@
                 })
                 .catch(function (error) {
                     console.error("分享失敗:", error);
+                    // 出錯時 (例如使用者未授權) 改為複製
                     directCopy(text);
                 });
             } else {
-                // 不支援直接分享，走剪貼簿
+                // 不支援直接分享，直接執行複製
                 directCopy(text);
             }
         }
