@@ -511,7 +511,6 @@
             <div id="event-button-container" class="event-grid"></div>
         </div>
 
-        <!-- Merged Main Content Card -->
         <div id="merged-content-card" style="display:none;">
             <div id="activity-info" class="info-card" style="display:block;">
                 <h2 id="info-title">活動資訊</h2>
@@ -568,10 +567,9 @@
                 </p>
                 <ul id="registered-list" class="stats-list"></ul>
             </div>
-        </div> <!-- End of Merged Card -->
-    </div>
+        </div> </div>
 
-<script>
+    <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
         const LIFF_ID = '2008678090-aXTesgDK';
         let LINE_UID = '', LINE_NICKNAME = '', CURRENT_EVENT_ID = null, ALL_EVENTS = [];
@@ -580,7 +578,6 @@
             const container = document.getElementById('guest-inputs-container');
             const div = document.createElement('div');
             div.className = 'guest-input-group';
-            // 這裡使用內建 HTML 結構，雖然是用 innerHTML 但內容是固定的 HTML tag，不包含使用者輸入，相對安全
             div.innerHTML = `
                 <input type="text" class="guest-name-item" placeholder="輸入來賓姓名">
                 <select class="guest-count-item">
@@ -588,7 +585,6 @@
                 </select>
                 <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
             `;
-            // 安全性修正：將值透過 value 屬性設定，而非 innerHTML
             div.querySelector('.guest-name-item').value = val;
             container.appendChild(div);
         }
@@ -605,7 +601,6 @@
                 LINE_UID = profile.userId;
                 LINE_NICKNAME = profile.displayName;
                 
-                // 安全性修正：使用 textContent 防止暱稱 XSS
                 document.getElementById('line-nickname').textContent = LINE_NICKNAME;
 
                 await loadEventsList();
@@ -638,13 +633,9 @@
                 
                 ALL_EVENTS.forEach(ev => {
                     const card = document.createElement('div');
-                    // 檢查是否為當前選中的活動，若是則補回 selected 樣式
                     let cssClass = 'event-card';
                     if (ev.IsRegistered) cssClass += ' selected'; 
-                    // UX 優化：如果重整前已選取這個活動，強制加上 selected (優先於 IsRegistered 的樣式)
                     if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
-                        // 移除其他可能存在的 selected (避免視覺衝突)，確保這個是 selected
-                        // 但因為這裡是重建 DOM，只要確保 classList 有加即可
                         if (!cssClass.includes('selected')) cssClass += ' selected';
                     }
 
@@ -680,7 +671,6 @@
             document.getElementById('registration-form').style.display = 'block';
             document.getElementById('statistics').style.display = 'block';
 
-            // 使用 textContent 防止活動標題含有惡意代碼
             document.getElementById('info-title').textContent = ev.Title;
             document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
             document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
@@ -692,7 +682,6 @@
             updateButtons(ev.UserStatus);
             loadStatsList(eventId);
 
-            // Smooth scroll
             document.getElementById('merged-content-card').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -700,7 +689,6 @@
 
         async function loadStatsList(eventId) {
             const ul = document.getElementById('registered-list');
-            // 清空列表
             ul.innerHTML = '';
 
             try {
@@ -715,19 +703,16 @@
                 }
 
                 users.forEach((u, index) => {
-                    // 1. 準備資料
                     const name = u.name || u.Nickname;
                     const totalCount = parseInt(u.attendees || u.Attendees_Count || 1);
                     const rawGuests = u.guestNames || u.Guest_Names || "";
                     const displayIndex = (index + 1).toString().padStart(2, '0');
 
-                    // 2. 建立主報名者文字
                     let nameLine = `${displayIndex}. ${name}`;
                     if (totalCount > 1) {
-                        nameLine += ` *${totalCount}`; // 使用空格區隔一下比較清楚
+                        nameLine += ` *${totalCount}`; 
                     }
 
-                    // 3. 處理來賓名單
                     let guestTextContent = "";
                     if (rawGuests) {
                         const guestArray = rawGuests.split(',').map(g => {
@@ -742,20 +727,17 @@
                         guestTextContent = `來賓：${guestArray.join(' / ')}`;
                     }
 
-                    // 4. 安全地建立 DOM 元素 (Security Fix)
                     const li = document.createElement('li');
                     
-                    // 姓名行
                     const nameDiv = document.createElement('div');
                     nameDiv.style.cssText = "font-size: 1rem; color: var(--text-main); line-height: 1.4;";
-                    nameDiv.textContent = nameLine; // ✅ 安全：自動轉義 HTML
+                    nameDiv.textContent = nameLine; 
                     li.appendChild(nameDiv);
 
-                    // 來賓行 (如果有的話)
                     if (guestTextContent) {
                         const guestDiv = document.createElement('div');
                         guestDiv.style.cssText = "margin-left: 25px; color: var(--text-sub); font-size: 0.9rem;";
-                        guestDiv.textContent = guestTextContent; // ✅ 安全
+                        guestDiv.textContent = guestTextContent;
                         li.appendChild(guestDiv);
                     }
 
@@ -767,94 +749,110 @@
             }
         }
 
+        // 📋 終極版複製與分享功能
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
                 return;
             }
 
-            const eventTitle = document.getElementById('info-title').textContent || '活動報名';
-            const creator = document.getElementById('info-creator').textContent || '--';
+            // 1. 準備內容
+            const eventTitle = document.getElementById('info-title').textContent || '活動';
             const eventTime = document.getElementById('info-time').textContent || '--';
             const venue = document.getElementById('info-venue-name').textContent || '--';
-            const locText = document.getElementById('info-location').textContent || '--'; 
             const totalDisplay = document.getElementById('total-attendees').textContent || '0';
             const registrationUrl = `https://liff.line.me/${LIFF_ID}`;
 
-            let textContent = `【${eventTitle}】\n`;
-            textContent += `👤 爐主：${creator}\n`;
-            textContent += `🕒 時間：${eventTime}\n`;
-            textContent += `📍 地點：${venue}\n`;
-            textContent += `🏠 地址：${locText}\n`;
-            textContent += `------------------\n`;
+            let text = `📋 ${eventTitle}\n`;
+            text += `📅 ${eventTime}\n`;
+            text += `📍 ${venue}\n`;
+            text += `──────────────\n`;
 
             LAST_LOADED_USERS.forEach((u, index) => {
                 const name = u.name || u.Nickname;
                 const count = parseInt(u.attendees || u.Attendees_Count || 1);
+                const displayIndex = (index + 1).toString() + "."; 
                 
                 const rawGuests = u.guestNames || u.Guest_Names || "";
-                let guestTextFormatted = "";
+                let guestNote = "";
                 
                 if (rawGuests) {
-                    const guestArray = rawGuests.split(',').map(g => {
+                    const guests = rawGuests.split(',').map(g => {
                         const match = g.match(/(.+)\(\+(\d+)\)/);
                         if (match) {
-                            const gName = match[1].trim();
-                            const gCount = parseInt(match[2]);
-                            return gCount > 1 ? `${gName}*${gCount}` : gName;
+                             const gCount = parseInt(match[2]);
+                             return gCount > 1 ? `${match[1]}*${gCount}` : match[1];
                         }
-                        return g.trim();
+                        return g;
                     });
-                    guestTextFormatted = guestArray.join(' / ');
+                    guestNote = ` (帶: ${guests.join('、')})`;
                 }
 
-                const displayIndex = (index + 1).toString().padStart(2, '0');
-
-                let lineText = `${displayIndex}. ${name}`;
+                let lineStr = `${displayIndex} ${name}`;
                 if (count > 1) {
-                    lineText += `*${count}`;
+                    lineStr += ` (+${count - 1})`;
                 }
-                textContent += lineText + `\n`;
-
-                if (guestTextFormatted) {
-                    textContent += `   來賓：${guestTextFormatted}\n`;
-                }
+                lineStr += guestNote;
+                
+                text += `${lineStr}\n`;
             });
 
-            textContent += `------------------\n`;
-            textContent += `📊 總計：${totalDisplay} 人\n`;
-            textContent += `🔗 報名：${registrationUrl}\n`;
+            text += `──────────────\n`;
+            text += `共 ${totalDisplay} 人報名\n`;
+            text += `🔗 報名連結：\n${registrationUrl}`;
 
-            const finishCopy = () => {
-                // UX: 震動回饋
-                if (navigator.vibrate) navigator.vibrate(50);
-                alert("✅ 名單已複製到剪貼簿！");
-            };
-
-            const fallbackCopyTextToClipboard = (text) => {
+            // 2. 定義輔助函式
+            const fallbackCopy = (txt) => {
                 const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
+                textArea.value = txt;
+                textArea.style.position = "fixed"; 
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
-                    const successful = document.execCommand('copy');
-                    if (successful) finishCopy();
+                    document.execCommand('copy');
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    alert("✅ 名單已複製！\n請貼上到 LINE 聊天室");
                 } catch (err) {
-                    alert("❌ 複製失敗，請手動全選內容。");
+                    alert("❌ 複製失敗，請手動選取文字");
                 }
                 document.body.removeChild(textArea);
-            }
+            };
 
-            if (!navigator.clipboard) {
-                fallbackCopyTextToClipboard(textContent);
-            } else {
-                navigator.clipboard.writeText(textContent).then(() => {
-                    finishCopy();
-                }, (err) => {
-                    fallbackCopyTextToClipboard(textContent);
+            const directCopy = (txt) => {
+                 if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(txt).then(() => {
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        alert("✅ 名單已複製！\n請直接貼上到 LINE 聊天室");
+                    }).catch(() => fallbackCopy(txt));
+                } else {
+                    fallbackCopy(txt);
+                }
+            };
+
+            // 3. 嘗試使用 LIFF ShareTargetPicker
+            if (liff.isApiAvailable('shareTargetPicker')) {
+                liff.shareTargetPicker([
+                    {
+                        type: "text",
+                        text: text
+                    }
+                ])
+                .then(function (res) {
+                    if (res) {
+                        console.log("分享成功");
+                    } else {
+                        // 使用者取消了分享視窗，改為複製
+                        directCopy(text);
+                    }
+                })
+                .catch(function (error) {
+                    console.error("分享失敗:", error);
+                    directCopy(text);
                 });
+            } else {
+                // 不支援直接分享，走剪貼簿
+                directCopy(text);
             }
         }
 
@@ -926,10 +924,8 @@
                 msg.textContent = data.message;
 
                 if (data.status === 'success') {
-                    // 1. 重新讀取該場次的報名名單
                     await loadStatsList(CURRENT_EVENT_ID);
 
-                    // 2. 重新計算總人數 (利用 loadStatsList 更新後的 LAST_LOADED_USERS)
                     let newTotal = 0;
                     if (LAST_LOADED_USERS && LAST_LOADED_USERS.length > 0) {
                         LAST_LOADED_USERS.forEach(u => {
@@ -939,7 +935,6 @@
                     }
                     document.getElementById('total-attendees').textContent = newTotal;
 
-                    // 3. 更新按鈕狀態
                     if (action === 'cancel') {
                         updateButtons(null);
                     } else {
@@ -952,8 +947,6 @@
                         updateButtons(currentStatus);
                     }
                     
-                    // 4. 背景刷新外層列表 (保持綠色勾勾)
-                    // 注意：loadEventsList 內部現在有邏輯會檢查 CURRENT_EVENT_ID 並補回 selected 樣式
                     loadEventsList();
                 }
 
