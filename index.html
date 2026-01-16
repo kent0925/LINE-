@@ -571,7 +571,7 @@
         </div> <!-- End of Merged Card -->
     </div>
 
-    <script>
+<script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
         const LIFF_ID = '2008678090-aXTesgDK';
         let LINE_UID = '', LINE_NICKNAME = '', CURRENT_EVENT_ID = null, ALL_EVENTS = [];
@@ -580,13 +580,16 @@
             const container = document.getElementById('guest-inputs-container');
             const div = document.createElement('div');
             div.className = 'guest-input-group';
+            // 這裡使用內建 HTML 結構，雖然是用 innerHTML 但內容是固定的 HTML tag，不包含使用者輸入，相對安全
             div.innerHTML = `
-    <input type="text" class="guest-name-item" value="${val}" placeholder="輸入來賓姓名">
-    <select class="guest-count-item">
-      ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => `<option value="${i}" ${i == count ? 'selected' : ''}>+${i}</option>`).join('')}
-    </select>
-    <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
-  `;
+                <input type="text" class="guest-name-item" placeholder="輸入來賓姓名">
+                <select class="guest-count-item">
+                  ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => `<option value="${i}" ${i == count ? 'selected' : ''}>+${i}</option>`).join('')}
+                </select>
+                <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
+            `;
+            // 安全性修正：將值透過 value 屬性設定，而非 innerHTML
+            div.querySelector('.guest-name-item').value = val;
             container.appendChild(div);
         }
 
@@ -601,6 +604,8 @@
                 const profile = await liff.getProfile();
                 LINE_UID = profile.userId;
                 LINE_NICKNAME = profile.displayName;
+                
+                // 安全性修正：使用 textContent 防止暱稱 XSS
                 document.getElementById('line-nickname').textContent = LINE_NICKNAME;
 
                 await loadEventsList();
@@ -630,13 +635,26 @@
                 ALL_EVENTS = data.events || [];
                 const container = document.getElementById('event-button-container');
                 container.innerHTML = '';
+                
                 ALL_EVENTS.forEach(ev => {
                     const card = document.createElement('div');
-                    card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
+                    // 檢查是否為當前選中的活動，若是則補回 selected 樣式
+                    let cssClass = 'event-card';
+                    if (ev.IsRegistered) cssClass += ' selected'; 
+                    // UX 優化：如果重整前已選取這個活動，強制加上 selected (優先於 IsRegistered 的樣式)
+                    if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
+                        // 移除其他可能存在的 selected (避免視覺衝突)，確保這個是 selected
+                        // 但因為這裡是重建 DOM，只要確保 classList 有加即可
+                        if (!cssClass.includes('selected')) cssClass += ' selected';
+                    }
+
+                    card.className = cssClass;
+                    
                     let html = '';
                     if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
                     html += `<span class="event-title">${ev.Title}</span>`;
                     html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+                    
                     card.innerHTML = html;
                     card.onclick = function () {
                         document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
@@ -657,14 +675,12 @@
             if (!ev) return;
             CURRENT_EVENT_ID = eventId;
 
-            // Show the merged card wrapper
             document.getElementById('merged-content-card').style.display = 'block';
-
-            // Ensure internal sections are visible (though they default to block in new HTML structure, we keep this for safety or reset)
             document.getElementById('activity-info').style.display = 'block';
             document.getElementById('registration-form').style.display = 'block';
             document.getElementById('statistics').style.display = 'block';
 
+            // 使用 textContent 防止活動標題含有惡意代碼
             document.getElementById('info-title').textContent = ev.Title;
             document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
             document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
@@ -672,10 +688,11 @@
             document.getElementById('info-location').textContent = ev.Address;
             document.getElementById('info-map-link').href = ev.MapUrl || '#';
             document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
+            
             updateButtons(ev.UserStatus);
             loadStatsList(eventId);
 
-            // Scroll to the card instead of just activity info
+            // Smooth scroll
             document.getElementById('merged-content-card').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -683,10 +700,12 @@
 
         async function loadStatsList(eventId) {
             const ul = document.getElementById('registered-list');
+            // 清空列表
+            ul.innerHTML = '';
+
             try {
                 const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
                 const data = await res.json();
-                ul.innerHTML = '';
                 const users = data.registeredUsers || [];
                 LAST_LOADED_USERS = users;
 
@@ -696,20 +715,20 @@
                 }
 
                 users.forEach((u, index) => {
+                    // 1. 準備資料
                     const name = u.name || u.Nickname;
                     const totalCount = parseInt(u.attendees || u.Attendees_Count || 1);
                     const rawGuests = u.guestNames || u.Guest_Names || "";
-
                     const displayIndex = (index + 1).toString().padStart(2, '0');
 
-                    // 主報名者顯示邏輯
+                    // 2. 建立主報名者文字
                     let nameLine = `${displayIndex}. ${name}`;
                     if (totalCount > 1) {
-                        nameLine += `*${totalCount}`;
+                        nameLine += ` *${totalCount}`; // 使用空格區隔一下比較清楚
                     }
 
-                    // 來賓顯示邏輯 (1人不顯示數量，超過1人顯示 *n)
-                    let guestText = "";
+                    // 3. 處理來賓名單
+                    let guestTextContent = "";
                     if (rawGuests) {
                         const guestArray = rawGuests.split(',').map(g => {
                             const match = g.match(/(.+)\(\+(\d+)\)/);
@@ -720,28 +739,34 @@
                             }
                             return g.trim();
                         });
-
-                        // 設定來賓縮排，且與上方主姓名保持緊湊
-                        guestText = `<div style="margin-left: 25px; color: var(--text-sub); font-size: 0.9rem;">
-                       來賓：${guestArray.join(' / ')}
-                     </div>`;
+                        guestTextContent = `來賓：${guestArray.join(' / ')}`;
                     }
 
+                    // 4. 安全地建立 DOM 元素 (Security Fix)
                     const li = document.createElement('li');
-                    li.innerHTML = `
-        <div style="font-size: 1rem; color: var(--text-main); line-height: 1.4;">
-          ${nameLine}
-        </div>
-        ${guestText}
-      `;
+                    
+                    // 姓名行
+                    const nameDiv = document.createElement('div');
+                    nameDiv.style.cssText = "font-size: 1rem; color: var(--text-main); line-height: 1.4;";
+                    nameDiv.textContent = nameLine; // ✅ 安全：自動轉義 HTML
+                    li.appendChild(nameDiv);
+
+                    // 來賓行 (如果有的話)
+                    if (guestTextContent) {
+                        const guestDiv = document.createElement('div');
+                        guestDiv.style.cssText = "margin-left: 25px; color: var(--text-sub); font-size: 0.9rem;";
+                        guestDiv.textContent = guestTextContent; // ✅ 安全
+                        li.appendChild(guestDiv);
+                    }
+
                     ul.appendChild(li);
                 });
             } catch (err) {
+                console.error(err);
                 ul.innerHTML = '<li style="text-align:center;">名單載入失敗</li>';
             }
         }
 
-// 針對手機 LINE 環境優化：複製文字到剪貼簿 (修改版：來賓人數判斷)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
@@ -767,38 +792,32 @@
                 const name = u.name || u.Nickname;
                 const count = parseInt(u.attendees || u.Attendees_Count || 1);
                 
-                // --- 修改開始：來賓顯示邏輯 ---
                 const rawGuests = u.guestNames || u.Guest_Names || "";
                 let guestTextFormatted = "";
                 
                 if (rawGuests) {
                     const guestArray = rawGuests.split(',').map(g => {
-                        // 使用正則表達式解析 "姓名(+人數)"
                         const match = g.match(/(.+)\(\+(\d+)\)/);
                         if (match) {
                             const gName = match[1].trim();
                             const gCount = parseInt(match[2]);
-                            // 關鍵判斷：人數大於 1 才顯示 *2
                             return gCount > 1 ? `${gName}*${gCount}` : gName;
                         }
                         return g.trim();
                     });
                     guestTextFormatted = guestArray.join(' / ');
                 }
-                // --- 修改結束 ---
 
                 const displayIndex = (index + 1).toString().padStart(2, '0');
 
-                // 本人/家屬顯示
                 let lineText = `${displayIndex}. ${name}`;
                 if (count > 1) {
                     lineText += `*${count}`;
                 }
                 textContent += lineText + `\n`;
 
-                // 顯示來賓 (使用上面處理好的 guestTextFormatted)
                 if (guestTextFormatted) {
-                    textContent += `  來賓：${guestTextFormatted}\n`;
+                    textContent += `   來賓：${guestTextFormatted}\n`;
                 }
             });
 
@@ -806,7 +825,12 @@
             textContent += `📊 總計：${totalDisplay} 人\n`;
             textContent += `🔗 報名：${registrationUrl}\n`;
 
-            // 執行複製邏輯
+            const finishCopy = () => {
+                // UX: 震動回饋
+                if (navigator.vibrate) navigator.vibrate(50);
+                alert("✅ 名單已複製到剪貼簿！");
+            };
+
             const fallbackCopyTextToClipboard = (text) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -816,7 +840,7 @@
                 textArea.select();
                 try {
                     const successful = document.execCommand('copy');
-                    if (successful) alert("✅ 名單已複製到剪貼簿！");
+                    if (successful) finishCopy();
                 } catch (err) {
                     alert("❌ 複製失敗，請手動全選內容。");
                 }
@@ -827,7 +851,7 @@
                 fallbackCopyTextToClipboard(textContent);
             } else {
                 navigator.clipboard.writeText(textContent).then(() => {
-                    alert("✅ 名單已複製到剪貼簿！");
+                    finishCopy();
                 }, (err) => {
                     fallbackCopyTextToClipboard(textContent);
                 });
@@ -874,6 +898,7 @@
             msg.style.display = 'block';
             msg.className = 'message';
             msg.textContent = '⏳ 處理中...';
+            
             const guestNamesWithCount = [];
             let totalGuestsCount = 0;
             document.querySelectorAll('.guest-input-group').forEach(group => {
@@ -886,11 +911,13 @@
             });
             const userCount = parseInt(document.getElementById('attendees-count').value);
             const finalTotal = userCount + totalGuestsCount;
+            
             const payload = {
                 action, eventId: CURRENT_EVENT_ID, lineUid: LINE_UID,
                 lineNickname: LINE_NICKNAME, attendeesCount: finalTotal,
                 guestNames: guestNamesWithCount.join(',')
             };
+            
             try {
                 const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const data = await res.json();
@@ -898,38 +925,35 @@
                 msg.className = data.status === 'success' ? 'message success' : 'message error';
                 msg.textContent = data.message;
 
-                // --- 補全建議位置開始 ---
                 if (data.status === 'success') {
-                    // 1. 重新讀取該場次的報名名單 (更新列表)
+                    // 1. 重新讀取該場次的報名名單
                     await loadStatsList(CURRENT_EVENT_ID);
 
                     // 2. 重新計算總人數 (利用 loadStatsList 更新後的 LAST_LOADED_USERS)
                     let newTotal = 0;
                     if (LAST_LOADED_USERS && LAST_LOADED_USERS.length > 0) {
                         LAST_LOADED_USERS.forEach(u => {
-                            // 相容大小寫欄位
                             const count = parseInt(u.attendees || u.Attendees_Count || 1);
                             newTotal += count;
                         });
                     }
                     document.getElementById('total-attendees').textContent = newTotal;
 
-                    // 3. 根據動作更新按鈕狀態
+                    // 3. 更新按鈕狀態
                     if (action === 'cancel') {
-                        // 如果是取消，狀態清空 (變成未報名狀態)
                         updateButtons(null);
                     } else {
-                        // 如果是報名或編輯，手動建立一個狀態物件來更新按鈕 (避免等待 API 延遲)
                         const currentStatus = {
                             Status: 'Registered',
                             IsRegistered: true,
-                            attendees: userCount, // 這是表單當前選的人數
-                            guestNames: guestNamesWithCount.join(',') // 這是表單當前的來賓
+                            attendees: userCount, 
+                            guestNames: guestNamesWithCount.join(',')
                         };
                         updateButtons(currentStatus);
                     }
                     
-                    // 4. 背景重新整理活動列表 (讓外層卡片顯示"已報名"綠色標籤)
+                    // 4. 背景刷新外層列表 (保持綠色勾勾)
+                    // 注意：loadEventsList 內部現在有邏輯會檢查 CURRENT_EVENT_ID 並補回 selected 樣式
                     loadEventsList();
                 }
 
@@ -938,13 +962,10 @@
                 msg.className = 'message error';
                 msg.textContent = '❌ 連線異常。';
             } finally {
-                // 無論成功失敗，最後都把按鈕解鎖
                 btns.forEach(b => b.disabled = false);
             }
         }
 
-        // --- 初始化入口 ---
-        // 當網頁載入完成後，執行 LIFF 初始化
         window.onload = function() {
             initializeLiff();
         };
