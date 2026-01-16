@@ -3,113 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>建立的新活動</title>
+<title>活動後台管理</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
-/* 樣式延用主題風格 */
-:root {
-  --line-green: #06C755;
-  --accent-red: #FF3B30;
-}
-body { font-family: sans-serif; background: #f4f7f6; padding: 15px; }
-.container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-h1 { color: var(--line-green); text-align: center; }
-.form-group { margin-bottom: 15px; }
-label { display: block; margin-bottom: 5px; font-weight: bold; color: #4a5568; font-size: 0.9rem; }
-input { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; }
-.btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-.btn-submit { background: var(--line-green); color: white; }
-.event-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-.del-btn { color: var(--accent-red); cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 5px 10px; border: 1px solid var(--accent-red); border-radius: 8px; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+    :root {
+      --primary: #06C755;
+      --danger: #FF3B30;
+      --bg: #f4f7f6;
+    }
+    body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); padding: 20px; color: #2d3748; }
+    .container { max-width: 500px; margin: 0 auto 40px auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    h1 { color: var(--primary); text-align: center; margin-bottom: 25px; font-size: 1.6rem; }
+    h2 { font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    
+    .form-group { margin-bottom: 18px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; color: #4a5568; }
+    input { width: 100%; padding: 14px; border: 2px solid #edf2f7; border-radius: 14px; box-sizing: border-box; font-size: 1rem; transition: all 0.2s; outline: none; }
+    input:focus { border-color: var(--primary); background: #fafffb; }
+    
+    .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: transform 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-submit { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3); }
+    .btn-submit:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; }
+
+    .event-list { list-style: none; padding: 0; margin: 0; }
+    .event-item { border-bottom: 1px dashed #e2e8f0; padding: 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .event-item:last-child { border-bottom: none; }
+    
+    .event-info { flex: 1; }
+    .event-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; color: #2d3748; }
+    .event-meta { font-size: 0.85rem; color: #718096; display: flex; flex-direction: column; gap: 2px; }
+
+    .del-btn { 
+        color: var(--danger); background: #fff5f5; 
+        padding: 8px 16px; border-radius: 10px; 
+        font-weight: 600; font-size: 0.9rem; 
+        cursor: pointer; border: 1px solid #fed7d7;
+        white-space: nowrap;
+    }
+    .del-btn:hover { background: #ffebeb; }
 </style>
 </head>
 <body>
 
 <div class="container">
   <h1>🛠️ 建立新活動</h1>
-  <div class="form-group"><label>活動標題</label><input type="text" id="title" placeholder="例如：春季交流會"></div>
-  <div class="form-group"><label>活動時間</label><input type="datetime-local" id="time"></div>
-  <div class="form-group"><label>開放報名時間</label><input type="datetime-local" id="openTime"></div>
-  <div class="form-group"><label>截止報名時間</label><input type="datetime-local" id="closeTime"></div>
-  <div class="form-group"><label>場地名稱</label><input type="text" id="venue" placeholder="例如：台北辦公室"></div>
-  <div class="form-group"><label>完整地址</label><input type="text" id="address" placeholder="自動生成地圖連結"></div>
-  <button class="btn btn-submit" onclick="publishEvent()">發佈並公開</button>
+  <div class="form-group"><label>活動標題</label><input type="text" id="title" placeholder="例如：週五羽球聚"></div>
+  
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div class="form-group"><label>活動時間</label><input type="datetime-local" id="time"></div>
+      <div class="form-group"><label>開放報名</label><input type="datetime-local" id="openTime"></div>
+  </div>
+  <div class="form-group"><label>截止報名</label><input type="datetime-local" id="closeTime"></div>
+  
+  <div class="form-group"><label>場地名稱</label><input type="text" id="venue" placeholder="例如：大安運動中心"></div>
+  <div class="form-group"><label>完整地址 (供導航用)</label><input type="text" id="address" placeholder="例如：台北市辛亥路三段55號"></div>
+  
+  <button id="btn-submit" class="btn btn-submit" onclick="publishEvent()">發佈並公開</button>
 
   <hr style="margin: 30px 0; border: 0; border-top: 2px dashed #eee;">
 
-  <h2>📋 我建立的活動管理</h2>
-  <div id="my-events-list">讀取中...</div>
+  <h2>📋 我建立的活動</h2>
+  <div id="my-events-list" style="text-align:center; color:#a0aec0;">載入中...</div>
 </div>
 
 <script>
+// ⚠️ 請確認這裡填入的是正確的 GAS 部署網址 (結尾為 /exec)
 const GAS_URL='https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
+
+// ⚠️ 建議：這頁可以申請一個單獨的 LIFF ID (例如 Admin 專用)，或者沿用同一個 ID 但透過參數區分
 const LIFF_ID='2008678090-N7n9nFaH';
+
 let ADMIN_UID='', ADMIN_NICKNAME='';
 
 async function init(){
-  await liff.init({ liffId: LIFF_ID });
-  if(!liff.isLoggedIn()){ liff.login(); return; }
-  const profile = await liff.getProfile();
-  ADMIN_UID = profile.userId;
-  ADMIN_NICKNAME = profile.displayName;
-  loadMyEvents();
+  try {
+      await liff.init({ liffId: LIFF_ID });
+      if(!liff.isLoggedIn()){ liff.login(); return; }
+      const profile = await liff.getProfile();
+      ADMIN_UID = profile.userId;
+      ADMIN_NICKNAME = profile.displayName;
+      loadMyEvents();
+  } catch(e) {
+      alert("LIFF 初始化失敗");
+  }
 }
 
 async function publishEvent(){
+  const btn = document.getElementById('btn-submit');
   const payload = {
     action: 'createEvent',
     adminUid: ADMIN_UID,
     adminNickname: ADMIN_NICKNAME,
-    title: document.getElementById('title').value,
+    title: document.getElementById('title').value.trim(),
     time: document.getElementById('time').value,
     openTime: document.getElementById('openTime').value,
     closeTime: document.getElementById('closeTime').value,
-    venueName: document.getElementById('venue').value,
-    address: document.getElementById('address').value
+    venueName: document.getElementById('venue').value.trim(),
+    address: document.getElementById('address').value.trim()
   };
 
-  if(!payload.title || !payload.time) return alert('請填寫完整資訊');
+  if(!payload.title || !payload.time || !payload.venueName) {
+      return alert('請至少填寫：標題、活動時間、場地名稱');
+  }
 
-  const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-  const data = await res.json();
-  if(data.status === 'success'){
-    alert('發佈成功！');
-    location.reload();
+  // UX: 鎖定按鈕避免重複發送
+  btn.disabled = true;
+  btn.textContent = "🚀 發佈中...";
+
+  try {
+      const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if(data.status === 'success'){
+        alert('✅ 發佈成功！');
+        // 清空表單
+        document.querySelectorAll('input').forEach(i => i.value = '');
+        loadMyEvents(); // 重新載入列表
+      } else {
+        alert('❌ 發佈失敗：' + data.message);
+      }
+  } catch(e) {
+      alert('連線錯誤');
+  } finally {
+      btn.disabled = false;
+      btn.textContent = "發佈並公開";
   }
 }
 
 async function loadMyEvents(){
-  const res = await fetch(`${GAS_URL}?action=getMyEvents&adminUid=${ADMIN_UID}`);
-  const data = await res.json();
-  const list = document.getElementById('my-events-list');
-  list.innerHTML = '';
-  
-  if(data.events.length === 0) list.innerHTML = '<p style="color:#999; text-align:center;">目前沒有建立任何活動</p>';
+  const listDiv = document.getElementById('my-events-list');
+  try {
+      const res = await fetch(`${GAS_URL}?action=getMyEvents&adminUid=${ADMIN_UID}`);
+      const data = await res.json();
+      
+      listDiv.innerHTML = '';
+      
+      if(!data.events || data.events.length === 0) {
+          listDiv.innerHTML = '<p style="color:#cbd5e0; padding:20px;">尚無建立的活動</p>';
+          return;
+      }
 
-  data.events.forEach(ev => {
-    list.innerHTML += `
-      <div class="event-item">
-        <div>
-          <div style="font-weight:bold;">${ev.Title}</div>
-          <div style="font-size:0.8rem; color:#666;">📅 ${ev.Time.replace('T', ' ')}</div>
-        </div>
-        <div class="del-btn" onclick="deleteEvent('${ev.EventID}')">🗑️ 刪除</div>
-      </div>
-    `;
-  });
+      data.events.forEach(ev => {
+        const item = document.createElement('div');
+        item.className = 'event-item';
+
+        // 使用 textContent 確保安全 (防 XSS)
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'event-info';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'event-title';
+        titleDiv.textContent = ev.Title;
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'event-meta';
+        metaDiv.innerHTML = `
+            <span>📅 ${ev.Time.replace('T', ' ')}</span>
+            <span>📍 ${ev.VenueName || '--'}</span>
+        `; // 這裡使用 innerHTML 是為了插入 span 標籤，但變數內容若擔心也可以再拆細
+
+        infoDiv.appendChild(titleDiv);
+        infoDiv.appendChild(metaDiv);
+
+        const delBtn = document.createElement('div');
+        delBtn.className = 'del-btn';
+        delBtn.textContent = '🗑️ 刪除';
+        delBtn.onclick = () => deleteEvent(ev.EventID);
+
+        item.appendChild(infoDiv);
+        item.appendChild(delBtn);
+        listDiv.appendChild(item);
+      });
+  } catch(e) {
+      listDiv.textContent = '讀取失敗';
+  }
 }
 
 async function deleteEvent(id){
-  if(!confirm('確定要刪除此活動嗎？這將會一併移除所有相關的報名資料！')) return;
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'deleteEvent', eventId: id, adminUid: ADMIN_UID })
-  });
-  const data = await res.json();
-  if(data.status === 'success') loadMyEvents();
+  if(!confirm('⚠️ 警告：\n確定要刪除此活動嗎？\n這將會一併移除所有「已報名」的資料！')) return;
+  
+  // UX: 給予刪除中的回饋，這裡簡單用 alert 或 loading 遮罩皆可，這邊簡化處理
+  try {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteEvent', eventId: id, adminUid: ADMIN_UID })
+      });
+      const data = await res.json();
+      if(data.status === 'success') {
+          // alert('已刪除'); // 可選，通常直接刷新列表即可
+          loadMyEvents();
+      } else {
+          alert('刪除失敗：' + data.message);
+      }
+  } catch(e) {
+      alert('連線錯誤');
+  }
 }
 
-init();
+// 啟動
+window.onload = init;
 </script>
 </body>
 </html>
