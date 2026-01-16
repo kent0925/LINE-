@@ -689,7 +689,6 @@
                 const data = await res.json();
                 ALL_EVENTS = data.events || [];
                 
-                // --- 修改開始：分區顯示邏輯 ---
                 const activeContainer = document.getElementById('active-events-container');
                 const pastContainer = document.getElementById('past-events-container');
                 const pastWrapper = document.getElementById('past-events-wrapper');
@@ -703,7 +702,7 @@
                     const isClosed = (ev.Status === 'CLOSE');
                     
                     let cssClass = 'event-card';
-                    if (isClosed) cssClass += ' past-event'; // 歷史活動變灰
+                    if (isClosed) cssClass += ' past-event';
                     if (ev.IsRegistered) cssClass += ' selected'; 
                     
                     if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
@@ -719,8 +718,17 @@
                     
                     card.innerHTML = html;
                     
+                    // --- 關鍵修改：點擊切換邏輯 (Toggle Logic) ---
                     card.onclick = function () {
-                        // 移除所有卡片的 selected 樣式 (需考慮 past-event class)
+                        // 1. 如果點擊當前已選中的活動 -> 執行收回
+                        if (CURRENT_EVENT_ID === ev.EventID) {
+                            this.classList.remove('selected');
+                            document.getElementById('merged-content-card').style.display = 'none';
+                            CURRENT_EVENT_ID = null;
+                            return; // 直接結束，不執行下方的開啟邏輯
+                        }
+
+                        // 2. 如果點擊其他活動 -> 執行切換/開啟
                         document.querySelectorAll('.event-card').forEach(el => {
                             if(el.classList.contains('past-event')) {
                                 el.className = 'event-card past-event';
@@ -728,11 +736,12 @@
                                 el.className = 'event-card';
                             }
                         });
+                        
                         this.classList.add('selected');
                         selectEvent(ev.EventID);
                     };
+                    // -------------------------------------------
 
-                    // 分流：Open -> Active, CLOSE -> Past
                     if (isClosed) {
                         pastContainer.appendChild(card);
                         hasPastEvents = true;
@@ -741,10 +750,7 @@
                     }
                 });
 
-                // 控制歷史區塊顯示
                 pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
-                // --- 修改結束 ---
-
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('event-selection').style.display = 'block';
             } catch (err) {
@@ -770,7 +776,6 @@
             document.getElementById('info-map-link').href = ev.MapUrl || '#';
             document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
             
-            // 傳入活動狀態給按鈕更新函式
             updateButtons(ev.UserStatus, ev.Status);
             loadStatsList(eventId);
 
@@ -789,7 +794,6 @@
                 const users = data.registeredUsers || [];
                 LAST_LOADED_USERS = users;
                 
-                // 更新總人數
                 document.getElementById('total-attendees').textContent = data.totalAttendees || 0;
 
                 if (users.length === 0) {
@@ -844,7 +848,6 @@
             }
         }
 
-        // 📋 複製功能 (格式: 01. Name *2 \n 來賓...)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
@@ -934,14 +937,12 @@
             }
         }
 
-        // --- 修改：更新按鈕與狀態 (截止後全部鎖定) ---
         function updateButtons(userStatus, eventStatus) {
             document.getElementById('guest-inputs-container').innerHTML = '';
             
             const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
             const isClosed = (eventStatus === 'CLOSE');
 
-            // 1. 截止訊息控制
             const closedMsg = document.getElementById('closed-message');
             if (isClosed) {
                 closedMsg.style.display = 'block';
@@ -950,24 +951,19 @@
                 closedMsg.style.display = 'none';
             }
 
-            // 2. 輸入項鎖定
             document.getElementById('attendees-count').disabled = isClosed;
             document.getElementById('btn-add-guest').style.display = isClosed ? 'none' : 'block';
 
-            // 3. 按鈕顯示邏輯 (截止後全部隱藏)
             const btnReg = document.getElementById('btn-register');
             const btnEdit = document.getElementById('btn-edit');
             const btnCancel = document.getElementById('btn-cancel');
 
-            // 先全部隱藏
             btnReg.style.display = 'none';
             btnEdit.style.display = 'none';
             btnCancel.style.display = 'none';
 
             if (isClosed) {
-                // 截止後：什麼按鈕都不顯示 (即使已報名也不顯示取消)
             } else {
-                // 開放中邏輯
                 if (isRegistered) {
                     btnCancel.style.display = 'inline-block';
                     btnEdit.style.display = 'inline-block';
@@ -976,7 +972,6 @@
                 }
             }
 
-            // 4. 資料回填
             if (isRegistered) {
                 const total = userStatus.Attendees_Count || userStatus.attendees || 1;
                 const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
@@ -998,7 +993,6 @@
                 }
                 document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
                 
-                // 如果是截止狀態，要把剛產生的刪除按鈕移除 (變唯讀)
                 if(isClosed) {
                     document.querySelectorAll('.btn-del-guest').forEach(btn => btn.remove());
                     document.querySelectorAll('.guest-name-item, .guest-count-item').forEach(el => el.disabled = true);
@@ -1045,11 +1039,8 @@
 
                 if (data.status === 'success') {
                     await loadStatsList(CURRENT_EVENT_ID);
-                    
-                    // 重新載入列表 (因為可能狀態變更)
                     await loadEventsList();
                     
-                    // 取得最新活動狀態傳給按鈕更新
                     const currEv = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
                     const stStr = currEv ? currEv.Status : 'Open';
 
@@ -1065,7 +1056,6 @@
                         updateButtons(currentStatus, stStr);
                     }
                 }
-
             } catch (err) {
                 console.error('Submit Error:', err);
                 msg.className = 'message error';
