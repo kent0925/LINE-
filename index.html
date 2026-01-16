@@ -749,15 +749,14 @@
             }
         }
 
-        // 📋 終極版複製與分享功能
-// 📋 終極版複製與分享功能 (修復 Bug 版)
+        // 📋 複製功能 (格式已調整：01. Name *2 \n      來賓：...)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
                 return;
             }
 
-            // 1. 準備內容
+            // 1. 準備表頭
             const eventTitle = document.getElementById('info-title').textContent || '活動';
             const eventTime = document.getElementById('info-time').textContent || '--';
             const venue = document.getElementById('info-venue-name').textContent || '--';
@@ -769,14 +768,22 @@
             text += `📍 ${venue}\n`;
             text += `──────────────\n`;
 
+            // 2. 組合名單 (格式修改重點區)
             LAST_LOADED_USERS.forEach((u, index) => {
                 const name = u.name || u.Nickname;
                 const count = parseInt(u.attendees || u.Attendees_Count || 1);
-                const displayIndex = (index + 1).toString() + "."; 
                 
+                // 修改 A: 序號補零 (1 -> 01)
+                const displayIndex = (index + 1).toString().padStart(2, '0') + "."; 
+                
+                // 修改 B: 主行顯示 (姓名 + *總人數)
+                let entryText = `${displayIndex} ${name}`;
+                if (count > 1) {
+                    entryText += ` *${count}`; // 顯示格式為 *2
+                }
+
+                // 修改 C: 來賓換行並縮排
                 const rawGuests = u.guestNames || u.Guest_Names || "";
-                let guestNote = "";
-                
                 if (rawGuests) {
                     const guests = rawGuests.split(',').map(g => {
                         const match = g.match(/(.+)\(\+(\d+)\)/);
@@ -786,23 +793,18 @@
                         }
                         return g;
                     });
-                    guestNote = ` (帶: ${guests.join('、')})`;
+                    // \n 表示換行，後面接 6 個空白做縮排對齊
+                    entryText += `\n      來賓：${guests.join('、')}`;
                 }
-
-                let lineStr = `${displayIndex} ${name}`;
-                if (count > 1) {
-                    lineStr += ` (+${count - 1})`;
-                }
-                lineStr += guestNote;
                 
-                text += `${lineStr}\n`;
+                text += `${entryText}\n`;
             });
 
             text += `──────────────\n`;
             text += `共 ${totalDisplay} 人報名\n`;
             text += `🔗 報名連結：\n${registrationUrl}`;
 
-            // 2. 定義輔助函式 (內部使用)
+            // 3. 執行複製 (輔助函式)
             const fallbackCopy = (txt) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = txt;
@@ -813,9 +815,9 @@
                 try {
                     document.execCommand('copy');
                     if (navigator.vibrate) navigator.vibrate(50);
-                    alert("✅ 名單已複製！\n請貼上到 LINE 聊天室");
+                    alert("✅ 名單已複製！");
                 } catch (err) {
-                    alert("❌ 複製失敗，請手動選取文字");
+                    alert("❌ 複製失敗");
                 }
                 document.body.removeChild(textArea);
             };
@@ -824,36 +826,21 @@
                  if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(txt).then(() => {
                         if (navigator.vibrate) navigator.vibrate(50);
-                        alert("✅ 名單已複製！\n請直接貼上到 LINE 聊天室");
+                        alert("✅ 名單已複製！");
                     }).catch(() => fallbackCopy(txt));
                 } else {
                     fallbackCopy(txt);
                 }
             };
 
-            // 3. 嘗試使用 LIFF ShareTargetPicker
+            // 4. 優先嘗試 LIFF 分享
             if (liff.isApiAvailable('shareTargetPicker')) {
-                liff.shareTargetPicker([
-                    {
-                        type: "text",
-                        text: text
-                    }
-                ])
-                .then(function (res) {
-                    if (res) {
-                        console.log("分享成功");
-                    } else {
-                        // 使用者取消了分享視窗，改為複製
-                        directCopy(text);
-                    }
+                liff.shareTargetPicker([{ type: "text", text: text }])
+                .then((res) => {
+                    if (!res) directCopy(text); // 用戶關閉視窗，轉為複製
                 })
-                .catch(function (error) {
-                    console.error("分享失敗:", error);
-                    // 出錯時 (例如使用者未授權) 改為複製
-                    directCopy(text);
-                });
+                .catch(() => directCopy(text)); // 出錯轉為複製
             } else {
-                // 不支援直接分享，直接執行複製
                 directCopy(text);
             }
         }
