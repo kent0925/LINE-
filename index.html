@@ -95,6 +95,33 @@
             border-radius: 4px;
         }
 
+        /* --- 修改：標題樣式 --- */
+        .section-title-active::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 20px;
+            background: var(--primary);
+            margin-right: 12px;
+            border-radius: 4px;
+        }
+
+        .section-title-past {
+            margin-top: 40px;
+            color: #747d8c;
+            border-top: 1px dashed #cbd5e0;
+            padding-top: 20px;
+        }
+        .section-title-past::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 20px;
+            background: #747d8c; /* 灰色 */
+            margin-right: 12px;
+            border-radius: 4px;
+        }
+
         /* Updated Card Styling for Merged View */
         .info-card,
         .form-section,
@@ -163,6 +190,23 @@
             background-color: var(--primary-soft);
             box-shadow: 0 8px 16px rgba(6, 199, 85, 0.2);
             transform: translateY(-3px);
+        }
+
+        /* --- 新增：歷史活動樣式 --- */
+        .event-card.past-event {
+            filter: grayscale(100%);
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+        .event-card.past-event:hover {
+            transform: none;
+            box-shadow: none;
+            opacity: 1;
+        }
+        .event-card.past-event.selected {
+            border-color: #747d8c;
+            background-color: #f1f2f6;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .event-card .reg-badge {
@@ -394,6 +438,12 @@
             color: #c53030;
             border: 1px solid #fed7d7;
         }
+        
+        .warning { 
+            background-color: #fffaf0; 
+            color: #c05621; 
+            border: 1px solid #fbd38d; 
+        }
 
         /* Loading Spinner */
         .loading {
@@ -507,8 +557,13 @@
         </div>
 
         <div id="event-selection" class="form-section" style="display:none;">
-            <h2>選擇活動場次</h2>
-            <div id="event-button-container" class="event-grid"></div>
+            <h2 class="section-title-active">🔥 舉辦中活動</h2>
+            <div id="active-events-container" class="event-grid"></div>
+
+            <div id="past-events-wrapper" style="display:none;">
+                <h2 class="section-title-past">📜 活動歷史回顧</h2>
+                <div id="past-events-container" class="event-grid"></div>
+            </div>
         </div>
 
         <div id="merged-content-card" style="display:none;">
@@ -530,9 +585,13 @@
             </div>
 
             <div id="registration-form" class="form-section" style="display:block;">
+                <div id="closed-message" class="message warning" style="display:none; margin-top:0; margin-bottom:20px;">
+                    ⚠️ 本場活動已結束，停止報名
+                </div>
+
                 <p style="margin-top:0;">
-                <strong>姓名：</strong> <span id="line-nickname"
-                    style="color:var(--text-main); font-weight:700;">載入中...</span>
+                    <strong>姓名：</strong> <span id="line-nickname"
+                        style="color:var(--text-main); font-weight:700;">載入中...</span>
                 </p>
 
                 <label for="attendees-count">本人/家屬人數</label>
@@ -540,7 +599,7 @@
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
                     <label style="margin:0;">來賓及人數</label>
-                    <button type="button" onclick="addGuestInput()" class="btn-export"
+                    <button id="btn-add-guest" type="button" onclick="addGuestInput()" class="btn-export"
                         style="background:var(--primary); box-shadow: 0 4px 6px rgba(6, 199, 85, 0.2);">+
                         新增來賓</button>
                 </div>
@@ -567,7 +626,8 @@
                 </p>
                 <ul id="registered-list" class="stats-list"></ul>
             </div>
-        </div> </div>
+        </div> 
+    </div>
 
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
@@ -628,13 +688,24 @@
                 const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
                 const data = await res.json();
                 ALL_EVENTS = data.events || [];
-                const container = document.getElementById('event-button-container');
-                container.innerHTML = '';
                 
+                // --- 修改開始：分區顯示邏輯 ---
+                const activeContainer = document.getElementById('active-events-container');
+                const pastContainer = document.getElementById('past-events-container');
+                const pastWrapper = document.getElementById('past-events-wrapper');
+                
+                activeContainer.innerHTML = '';
+                pastContainer.innerHTML = '';
+                let hasPastEvents = false;
+
                 ALL_EVENTS.forEach(ev => {
                     const card = document.createElement('div');
+                    const isClosed = (ev.Status === 'CLOSE');
+                    
                     let cssClass = 'event-card';
+                    if (isClosed) cssClass += ' past-event'; // 歷史活動變灰
                     if (ev.IsRegistered) cssClass += ' selected'; 
+                    
                     if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
                         if (!cssClass.includes('selected')) cssClass += ' selected';
                     }
@@ -647,13 +718,33 @@
                     html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
                     
                     card.innerHTML = html;
+                    
                     card.onclick = function () {
-                        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
+                        // 移除所有卡片的 selected 樣式 (需考慮 past-event class)
+                        document.querySelectorAll('.event-card').forEach(el => {
+                            if(el.classList.contains('past-event')) {
+                                el.className = 'event-card past-event';
+                            } else {
+                                el.className = 'event-card';
+                            }
+                        });
                         this.classList.add('selected');
                         selectEvent(ev.EventID);
                     };
-                    container.appendChild(card);
+
+                    // 分流：Open -> Active, CLOSE -> Past
+                    if (isClosed) {
+                        pastContainer.appendChild(card);
+                        hasPastEvents = true;
+                    } else {
+                        activeContainer.appendChild(card);
+                    }
                 });
+
+                // 控制歷史區塊顯示
+                pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
+                // --- 修改結束 ---
+
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('event-selection').style.display = 'block';
             } catch (err) {
@@ -679,7 +770,8 @@
             document.getElementById('info-map-link').href = ev.MapUrl || '#';
             document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
             
-            updateButtons(ev.UserStatus);
+            // 傳入活動狀態給按鈕更新函式
+            updateButtons(ev.UserStatus, ev.Status);
             loadStatsList(eventId);
 
             document.getElementById('merged-content-card').scrollIntoView({ behavior: 'smooth' });
@@ -696,6 +788,9 @@
                 const data = await res.json();
                 const users = data.registeredUsers || [];
                 LAST_LOADED_USERS = users;
+                
+                // 更新總人數
+                document.getElementById('total-attendees').textContent = data.totalAttendees || 0;
 
                 if (users.length === 0) {
                     ul.innerHTML = '<li style="justify-content:center; color:var(--text-sub); opacity:0.6;">尚無人報名</li>';
@@ -749,14 +844,13 @@
             }
         }
 
-        // 📋 複製功能 (格式已調整：01. Name *2 \n      來賓：...)
+        // 📋 複製功能 (格式: 01. Name *2 \n 來賓...)
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
                 alert("目前無名單可匯出");
                 return;
             }
 
-            // 1. 準備表頭
             const eventTitle = document.getElementById('info-title').textContent || '活動';
             const eventTime = document.getElementById('info-time').textContent || '--';
             const venue = document.getElementById('info-venue-name').textContent || '--';
@@ -768,22 +862,14 @@
             text += `📍 ${venue}\n`;
             text += `──────────────\n`;
 
-            // 2. 組合名單 (格式修改重點區)
             LAST_LOADED_USERS.forEach((u, index) => {
                 const name = u.name || u.Nickname;
                 const count = parseInt(u.attendees || u.Attendees_Count || 1);
-                
-                // 修改 A: 序號補零 (1 -> 01)
                 const displayIndex = (index + 1).toString().padStart(2, '0') + "."; 
                 
-                // 修改 B: 主行顯示 (姓名 + *總人數)
-                let entryText = `${displayIndex} ${name}`;
-                if (count > 1) {
-                    entryText += ` *${count}`; // 顯示格式為 *2
-                }
-
-                // 修改 C: 來賓換行並縮排
                 const rawGuests = u.guestNames || u.Guest_Names || "";
+                let guestNote = "";
+                
                 if (rawGuests) {
                     const guests = rawGuests.split(',').map(g => {
                         const match = g.match(/(.+)\(\+(\d+)\)/);
@@ -793,18 +879,22 @@
                         }
                         return g;
                     });
-                    // \n 表示換行，後面接 6 個空白做縮排對齊
-                    entryText += `\n     來賓：${guests.join('、')}`;
+                    guestNote = `\n      來賓：${guests.join('、')}`;
                 }
+
+                let lineStr = `${displayIndex} ${name}`;
+                if (count > 1) {
+                    lineStr += ` *${count}`;
+                }
+                lineStr += guestNote;
                 
-                text += `${entryText}\n`;
+                text += `${lineStr}\n`;
             });
 
             text += `──────────────\n`;
             text += `共 ${totalDisplay} 人報名\n`;
             text += `🔗 報名連結：\n${registrationUrl}`;
 
-            // 3. 執行複製 (輔助函式)
             const fallbackCopy = (txt) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = txt;
@@ -833,28 +923,65 @@
                 }
             };
 
-            // 4. 優先嘗試 LIFF 分享
             if (liff.isApiAvailable('shareTargetPicker')) {
                 liff.shareTargetPicker([{ type: "text", text: text }])
                 .then((res) => {
-                    if (!res) directCopy(text); // 用戶關閉視窗，轉為複製
+                    if (!res) directCopy(text);
                 })
-                .catch(() => directCopy(text)); // 出錯轉為複製
+                .catch(() => directCopy(text));
             } else {
                 directCopy(text);
             }
         }
 
-        function updateButtons(userStatus) {
+        // --- 修改：更新按鈕與狀態 (截止後全部鎖定) ---
+        function updateButtons(userStatus, eventStatus) {
             document.getElementById('guest-inputs-container').innerHTML = '';
+            
             const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
+            const isClosed = (eventStatus === 'CLOSE');
+
+            // 1. 截止訊息控制
+            const closedMsg = document.getElementById('closed-message');
+            if (isClosed) {
+                closedMsg.style.display = 'block';
+                closedMsg.textContent = isRegistered ? '⚠️ 本場活動已截止 (您已完成報名)' : '⚠️ 本場活動已結束，停止報名';
+            } else {
+                closedMsg.style.display = 'none';
+            }
+
+            // 2. 輸入項鎖定
+            document.getElementById('attendees-count').disabled = isClosed;
+            document.getElementById('btn-add-guest').style.display = isClosed ? 'none' : 'block';
+
+            // 3. 按鈕顯示邏輯 (截止後全部隱藏)
+            const btnReg = document.getElementById('btn-register');
+            const btnEdit = document.getElementById('btn-edit');
+            const btnCancel = document.getElementById('btn-cancel');
+
+            // 先全部隱藏
+            btnReg.style.display = 'none';
+            btnEdit.style.display = 'none';
+            btnCancel.style.display = 'none';
+
+            if (isClosed) {
+                // 截止後：什麼按鈕都不顯示 (即使已報名也不顯示取消)
+            } else {
+                // 開放中邏輯
+                if (isRegistered) {
+                    btnCancel.style.display = 'inline-block';
+                    btnEdit.style.display = 'inline-block';
+                } else {
+                    btnReg.style.display = 'inline-block';
+                }
+            }
+
+            // 4. 資料回填
             if (isRegistered) {
-                document.getElementById('btn-register').style.display = 'none';
-                document.getElementById('btn-cancel').style.display = 'inline-block';
-                document.getElementById('btn-edit').style.display = 'inline-block';
                 const total = userStatus.Attendees_Count || userStatus.attendees || 1;
                 const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
                 let guestPartTotal = 0;
+                
                 if (namesStr) {
                     namesStr.split(',').forEach(item => {
                         const match = item.match(/(.+)\(\+(\d+)\)/);
@@ -870,10 +997,14 @@
                     });
                 }
                 document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
+                
+                // 如果是截止狀態，要把剛產生的刪除按鈕移除 (變唯讀)
+                if(isClosed) {
+                    document.querySelectorAll('.btn-del-guest').forEach(btn => btn.remove());
+                    document.querySelectorAll('.guest-name-item, .guest-count-item').forEach(el => el.disabled = true);
+                }
+
             } else {
-                document.getElementById('btn-register').style.display = 'inline-block';
-                document.getElementById('btn-cancel').style.display = 'none';
-                document.getElementById('btn-edit').style.display = 'none';
                 document.getElementById('attendees-count').value = 1;
             }
         }
@@ -914,18 +1045,16 @@
 
                 if (data.status === 'success') {
                     await loadStatsList(CURRENT_EVENT_ID);
-
-                    let newTotal = 0;
-                    if (LAST_LOADED_USERS && LAST_LOADED_USERS.length > 0) {
-                        LAST_LOADED_USERS.forEach(u => {
-                            const count = parseInt(u.attendees || u.Attendees_Count || 1);
-                            newTotal += count;
-                        });
-                    }
-                    document.getElementById('total-attendees').textContent = newTotal;
+                    
+                    // 重新載入列表 (因為可能狀態變更)
+                    await loadEventsList();
+                    
+                    // 取得最新活動狀態傳給按鈕更新
+                    const currEv = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
+                    const stStr = currEv ? currEv.Status : 'Open';
 
                     if (action === 'cancel') {
-                        updateButtons(null);
+                        updateButtons(null, stStr);
                     } else {
                         const currentStatus = {
                             Status: 'Registered',
@@ -933,10 +1062,8 @@
                             attendees: userCount, 
                             guestNames: guestNamesWithCount.join(',')
                         };
-                        updateButtons(currentStatus);
+                        updateButtons(currentStatus, stStr);
                     }
-                    
-                    loadEventsList();
                 }
 
             } catch (err) {
