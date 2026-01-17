@@ -5,9 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>活動報名系統</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://static.line-scdn.net">
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Poppins:wght@400;600&display=swap');
+        /* @import 改用 link 引入以提升效能，故註解掉 */
+        /* @import url('https://fonts.googleapis.com/css2?family=...'); */
 
         :root {
             --primary: #06C755;
@@ -28,7 +37,6 @@
         body {
             font-family: 'Poppins', 'Noto Sans TC', sans-serif;
             background: #eef2f3;
-            /* Fallback */
             background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
             background-attachment: fixed;
             min-height: 100vh;
@@ -56,7 +64,6 @@
             transition: transform 0.3s ease;
         }
 
-        /* Decorative top line */
         .container::before {
             content: "";
             position: absolute;
@@ -95,7 +102,6 @@
             border-radius: 4px;
         }
 
-        /* --- 修改：標題樣式 --- */
         .section-title-active::before {
             content: "";
             display: inline-block;
@@ -117,12 +123,11 @@
             display: inline-block;
             width: 6px;
             height: 20px;
-            background: #747d8c; /* 灰色 */
+            background: #747d8c;
             margin-right: 12px;
             border-radius: 4px;
         }
 
-        /* Updated Card Styling for Merged View */
         .info-card,
         .form-section,
         .stats-section {
@@ -147,7 +152,6 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             margin-bottom: 24px;
             overflow: hidden;
-            /* Ensure children don't overflow rounded corners */
         }
 
         #merged-content-card:hover {
@@ -155,7 +159,6 @@
             box-shadow: var(--shadow-soft);
         }
 
-        /* Grid Layout for Events */
         .event-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -192,7 +195,6 @@
             transform: translateY(-3px);
         }
 
-        /* --- 新增：歷史活動樣式 --- */
         .event-card.past-event {
             filter: grayscale(100%);
             opacity: 0.7;
@@ -239,7 +241,6 @@
             border-radius: 12px;
         }
 
-        /* Inputs */
         label {
             display: block;
             margin: 18px 0 8px 4px;
@@ -272,7 +273,6 @@
             box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.1);
         }
 
-        /* Buttons */
         .btn {
             padding: 16px;
             border: none;
@@ -311,7 +311,6 @@
             width: 100%;
         }
 
-        /* Make submit button full width if it's the only one, handling via JS logic usually, but here flex/grid helps */
         #form-actions .btn-register {
             grid-column: span 2;
         }
@@ -357,14 +356,12 @@
             transform: translateY(-1px);
         }
 
-        /* Stats List */
         .stats-list {
             list-style: none;
             padding: 0;
             margin: 15px 0 0 0;
             max-height: 300px;
             overflow-y: auto;
-            /* Scrollbar styling */
             scrollbar-width: thin;
             scrollbar-color: #cbd5e0 #f1f5f9;
         }
@@ -385,7 +382,6 @@
         .stats-list li {
             padding: 12px 8px;
             border-bottom: 1px dashed #e2e8f0;
-            /* Dashed line for a notebook feel */
             font-size: 0.95rem;
             display: flex;
             flex-direction: column;
@@ -400,7 +396,6 @@
             background: #fafafa;
         }
 
-        /* Messages */
         .message {
             padding: 16px;
             margin-top: 24px;
@@ -420,7 +415,6 @@
                 opacity: 0;
                 transform: translateY(15px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -445,7 +439,6 @@
             border: 1px solid #fbd38d; 
         }
 
-        /* Loading Spinner */
         .loading {
             padding: 80px 20px;
             display: flex;
@@ -461,20 +454,17 @@
             border-radius: 50%;
             margin-bottom: 20px;
             animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-            /* Playful spin */
         }
 
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
             }
-
             100% {
                 transform: rotate(360deg);
             }
         }
 
-        /* Guest Input Group */
         .guest-input-group {
             display: flex;
             gap: 10px;
@@ -488,7 +478,6 @@
                 opacity: 0;
                 transform: translateY(-5px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -507,7 +496,6 @@
         .btn-del-guest {
             width: 46px;
             height: 46px;
-            /* Matches input height roughly */
             background: #fff;
             color: var(--accent-red);
             border: 2px solid #fed7d7;
@@ -528,12 +516,10 @@
             border-color: var(--accent-red);
         }
 
-        /* Activity Info Styling Enhancement */
         #activity-info p {
             margin: 8px 0;
             display: flex;
             align-items: center;
-            /* Align icon with text */
             line-height: 1.5;
         }
 
@@ -541,7 +527,26 @@
             margin-right: 6px;
             color: var(--text-main);
             min-width: 80px;
-            /* Align content */
+        }
+
+        /* 🚀 速度優化 4：新增骨架屏 (Skeleton) 樣式 */
+        @keyframes skeleton-loading {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+            border-radius: 20px;
+        }
+
+        .skeleton-card {
+            height: 90px;
+            width: 100%;
+            margin-bottom: 0;
+            border: 2px solid transparent;
         }
     </style>
 </head>
@@ -558,7 +563,12 @@
 
         <div id="event-selection" class="form-section" style="display:none;">
             <h2 class="section-title-active">🔥 舉辦中活動</h2>
-            <div id="active-events-container" class="event-grid"></div>
+            <div id="active-events-container" class="event-grid">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
 
             <div id="past-events-wrapper" style="display:none;">
                 <h2 class="section-title-past">📜 活動歷史回顧</h2>
@@ -683,119 +693,117 @@
             return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
         }
 
-// 修改原本的 loadEventsList 函數
-async function loadEventsList() {
-    const cacheKey = `events_cache_${LINE_UID}`; // 綁定使用者 ID，避免登出入資料混淆
+        // 🚀 速度優化：修改 loadEventsList 函數，加入 LocalStorage 快取機制
+        async function loadEventsList() {
+            const cacheKey = `events_cache_${LINE_UID}`;
 
-    // ---------------------------------------------------------
-    // 1. ⚡️ [極速模式] 先檢查有沒有快取，有的話直接顯示！
-    // ---------------------------------------------------------
-    const cachedData = localStorage.getItem(cacheKey);
-    if (cachedData) {
-        console.log("🚀 使用快取資料，實現秒開！");
-        const parsed = JSON.parse(cachedData);
-        renderEvents(parsed.events); // 抽離出的渲染函數 (下面會給)
-        
-        // 顯示一個小小的 loading 提示，讓使用者知道我們還在確認最新狀態
-        document.getElementById('loading-spinner').style.display = 'flex'; 
-        document.getElementById('loading-spinner').querySelector('p').textContent = '更新最新狀態中...';
-    } else {
-        // 如果完全沒快取，還是要顯示大 Loading
-        document.getElementById('loading-spinner').style.display = 'flex';
-    }
+            // 1. 先嘗試讀取快取 (秒開)
+            const cachedData = localStorage.getItem(cacheKey);
+            if (cachedData) {
+                console.log("🚀 使用快取資料");
+                const parsed = JSON.parse(cachedData);
+                // 有快取時，先顯示內容，並將 Loading 改為小字提示
+                document.getElementById('event-selection').style.display = 'block'; // 確保容器顯示
+                renderEvents(parsed.events); 
+                
+                // 調整 Spinner 樣式為「更新中」
+                document.getElementById('loading-spinner').style.padding = "10px";
+                document.getElementById('loading-spinner').querySelector('.spinner').style.width = "20px";
+                document.getElementById('loading-spinner').querySelector('.spinner').style.height = "20px";
+                document.getElementById('loading-spinner').querySelector('.spinner').style.borderWidth = "3px";
+                document.getElementById('loading-spinner').querySelector('.spinner').style.marginBottom = "0";
+                document.getElementById('loading-spinner').querySelector('p').textContent = '更新最新狀態中...';
+                document.getElementById('loading-spinner').querySelector('p').style.fontSize = "0.85rem";
+                document.getElementById('loading-spinner').querySelector('p').style.margin = "5px 0 0 0";
+            } else {
+                // 無快取時，顯示原本的大 Loading
+                document.getElementById('loading-spinner').style.display = 'flex';
+                // 無快取時，預設顯示骨架屏
+                document.getElementById('event-selection').style.display = 'block';
+            }
 
-    try {
-        // ---------------------------------------------------------
-        // 2. 🐢 [背景更新] 雖然畫面出來了，但還是要去 Server 抓最新的
-        // ---------------------------------------------------------
-        const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-        const data = await res.json();
-        
-        // 3. 拿到新資料後，更新快取
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-        ALL_EVENTS = data.events || [];
+            try {
+                // 2. 背景更新資料
+                const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+                const data = await res.json();
+                
+                // 3. 更新快取
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                ALL_EVENTS = data.events || [];
 
-        // 4. 再次渲染 (覆蓋舊資料)
-        renderEvents(ALL_EVENTS);
+                // 4. 再次渲染 (確保資料最新)
+                renderEvents(ALL_EVENTS);
 
-    } catch (err) {
-        console.error('更新失敗，將維持顯示快取資料:', err);
-    } finally {
-        document.getElementById('loading-spinner').style.display = 'none';
-    }
-}
-
-// ---------------------------------------------------------
-// 🎨 [重構] 把渲染邏輯抽離出來，因為要呼叫兩次
-// ---------------------------------------------------------
-function renderEvents(events) {
-    ALL_EVENTS = events; // 更新全域變數
-    const activeContainer = document.getElementById('active-events-container');
-    const pastContainer = document.getElementById('past-events-container');
-    const pastWrapper = document.getElementById('past-events-wrapper');
-    
-    activeContainer.innerHTML = '';
-    pastContainer.innerHTML = '';
-    let hasPastEvents = false;
-
-    events.forEach(ev => {
-        // ... (這裡放原本建立 card 的所有代碼) ...
-        // ... 原本的 card.createElement ...
-        // ... 原本的 card.onclick ... 
-        
-        // 為了節省篇幅，請把原本 forEach 裡面的內容搬進來
-        const card = document.createElement('div');
-        const isClosed = (ev.Status === 'CLOSE');
-        
-        let cssClass = 'event-card';
-        if (isClosed) cssClass += ' past-event';
-        if (ev.IsRegistered) cssClass += ' selected'; 
-        
-        // 保留原本的邏輯
-        if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
-            if (!cssClass.includes('selected')) cssClass += ' selected';
+            } catch (err) {
+                console.error('更新失敗，維持顯示快取:', err);
+            } finally {
+                // 隱藏 Loading
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
         }
 
-        card.className = cssClass;
-        
-        let html = '';
-        if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
-        html += `<span class="event-title">${ev.Title}</span>`;
-        // 注意：這裡如果用快取，Time 已經是字串了，不是 Date 物件，可能需要微調 formatLocalTime
-        html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
-        
-        card.innerHTML = html;
+        function renderEvents(events) {
+            ALL_EVENTS = events; 
+            const activeContainer = document.getElementById('active-events-container');
+            const pastContainer = document.getElementById('past-events-container');
+            const pastWrapper = document.getElementById('past-events-wrapper');
+            
+            // 清空容器 (此動作會移除骨架屏)
+            activeContainer.innerHTML = '';
+            pastContainer.innerHTML = '';
+            let hasPastEvents = false;
 
-        card.onclick = function () {
-             if (CURRENT_EVENT_ID === ev.EventID) {
-                this.classList.remove('selected');
-                document.getElementById('merged-content-card').style.display = 'none';
-                CURRENT_EVENT_ID = null;
-                return;
-            }
-            document.querySelectorAll('.event-card').forEach(el => {
-                if(el.classList.contains('past-event')) {
-                    el.className = 'event-card past-event';
+            events.forEach(ev => {
+                const card = document.createElement('div');
+                const isClosed = (ev.Status === 'CLOSE');
+                
+                let cssClass = 'event-card';
+                if (isClosed) cssClass += ' past-event';
+                if (ev.IsRegistered) cssClass += ' selected'; 
+                
+                if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
+                    if (!cssClass.includes('selected')) cssClass += ' selected';
+                }
+
+                card.className = cssClass;
+                
+                let html = '';
+                if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
+                html += `<span class="event-title">${ev.Title}</span>`;
+                html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+                
+                card.innerHTML = html;
+
+                card.onclick = function () {
+                     if (CURRENT_EVENT_ID === ev.EventID) {
+                        this.classList.remove('selected');
+                        document.getElementById('merged-content-card').style.display = 'none';
+                        CURRENT_EVENT_ID = null;
+                        return;
+                    }
+                    document.querySelectorAll('.event-card').forEach(el => {
+                        if(el.classList.contains('past-event')) {
+                            el.className = 'event-card past-event';
+                        } else {
+                            el.className = 'event-card';
+                        }
+                    });
+                    this.classList.add('selected');
+                    selectEvent(ev.EventID);
+                };
+
+                if (isClosed) {
+                    pastContainer.appendChild(card);
+                    hasPastEvents = true;
                 } else {
-                    el.className = 'event-card';
+                    activeContainer.appendChild(card);
                 }
             });
-            this.classList.add('selected');
-            selectEvent(ev.EventID);
-        };
 
-        if (isClosed) {
-            pastContainer.appendChild(card);
-            hasPastEvents = true;
-        } else {
-            activeContainer.appendChild(card);
+            pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
+            document.getElementById('event-selection').style.display = 'block';
         }
-    });
 
-    pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
-    // 注意：這裡不要隱藏 loading-spinner，交給 finally 區塊統一處理
-    document.getElementById('event-selection').style.display = 'block';
-}
         function selectEvent(eventId) {
             const ev = ALL_EVENTS.find(e => e.EventID === eventId);
             if (!ev) return;
