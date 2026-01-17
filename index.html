@@ -5,18 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>活動報名系統</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://static.line-scdn.net">
-
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
-
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        /* @import 改用 link 引入以提升效能，故註解掉 */
-        /* @import url('https://fonts.googleapis.com/css2?family=...'); */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Poppins:wght@400;600&display=swap');
 
         :root {
             --primary: #06C755;
@@ -529,24 +520,30 @@
             min-width: 80px;
         }
 
-        /* 🚀 速度優化 4：新增骨架屏 (Skeleton) 樣式 */
-        @keyframes skeleton-loading {
-            0% { background-position: 100% 50%; }
-            100% { background-position: 0 50%; }
+        /* 🆕 Toast Notification Style */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(47, 53, 66, 0.95);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite ease-in-out;
-            border-radius: 20px;
-        }
-
-        .skeleton-card {
-            height: 90px;
-            width: 100%;
-            margin-bottom: 0;
-            border: 2px solid transparent;
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
     </style>
 </head>
@@ -563,12 +560,7 @@
 
         <div id="event-selection" class="form-section" style="display:none;">
             <h2 class="section-title-active">🔥 舉辦中活動</h2>
-            <div id="active-events-container" class="event-grid">
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
-            </div>
+            <div id="active-events-container" class="event-grid"></div>
 
             <div id="past-events-wrapper" style="display:none;">
                 <h2 class="section-title-past">📜 活動歷史回顧</h2>
@@ -639,10 +631,34 @@
         </div> 
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4TwMhhZns3p2jc2tVTI376-6DU9CG8tkuRmL3KKcq_BmIuB2ySV2CKgaCc5eyS2vLnA/exec';
         const LIFF_ID = '2008678090-aXTesgDK';
         let LINE_UID = '', LINE_NICKNAME = '', CURRENT_EVENT_ID = null, ALL_EVENTS = [];
+
+        // 🆕 Toast Function (Replaces alert)
+        function showToast(text) {
+            let toast = document.getElementById('custom-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'custom-toast';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            // Determine icon based on content (simple check)
+            const icon = (text.includes('❌') || text.includes('⚠️') || text.includes('失敗')) ? '' : '✅';
+            toast.innerHTML = `${icon} ${text}`;
+            toast.classList.add('show');
+            
+            // Clear existing timeout to prevent blinking
+            if(window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
 
         function addGuestInput(val = '', count = 1) {
             const container = document.getElementById('guest-inputs-container');
@@ -675,7 +691,7 @@
 
                 await loadEventsList();
             } catch (err) {
-                alert('LIFF 初始化失敗');
+                showToast('❌ LIFF 初始化失敗');
             }
         }
 
@@ -693,117 +709,119 @@
             return `${year}/${month}/${date} (${dayName}) ${hours}:${minutes}`;
         }
 
-        // 🚀 速度優化：修改 loadEventsList 函數，加入 LocalStorage 快取機制
-        async function loadEventsList() {
-            const cacheKey = `events_cache_${LINE_UID}`;
+// 修改原本的 loadEventsList 函數
+async function loadEventsList() {
+    const cacheKey = `events_cache_${LINE_UID}`; // 綁定使用者 ID，避免登出入資料混淆
 
-            // 1. 先嘗試讀取快取 (秒開)
-            const cachedData = localStorage.getItem(cacheKey);
-            if (cachedData) {
-                console.log("🚀 使用快取資料");
-                const parsed = JSON.parse(cachedData);
-                // 有快取時，先顯示內容，並將 Loading 改為小字提示
-                document.getElementById('event-selection').style.display = 'block'; // 確保容器顯示
-                renderEvents(parsed.events); 
-                
-                // 調整 Spinner 樣式為「更新中」
-                document.getElementById('loading-spinner').style.padding = "10px";
-                document.getElementById('loading-spinner').querySelector('.spinner').style.width = "20px";
-                document.getElementById('loading-spinner').querySelector('.spinner').style.height = "20px";
-                document.getElementById('loading-spinner').querySelector('.spinner').style.borderWidth = "3px";
-                document.getElementById('loading-spinner').querySelector('.spinner').style.marginBottom = "0";
-                document.getElementById('loading-spinner').querySelector('p').textContent = '更新最新狀態中...';
-                document.getElementById('loading-spinner').querySelector('p').style.fontSize = "0.85rem";
-                document.getElementById('loading-spinner').querySelector('p').style.margin = "5px 0 0 0";
-            } else {
-                // 無快取時，顯示原本的大 Loading
-                document.getElementById('loading-spinner').style.display = 'flex';
-                // 無快取時，預設顯示骨架屏
-                document.getElementById('event-selection').style.display = 'block';
-            }
+    // ---------------------------------------------------------
+    // 1. ⚡️ [極速模式] 先檢查有沒有快取，有的話直接顯示！
+    // ---------------------------------------------------------
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+        console.log("🚀 使用快取資料，實現秒開！");
+        const parsed = JSON.parse(cachedData);
+        renderEvents(parsed.events); // 抽離出的渲染函數 (下面會給)
+        
+        // 顯示一個小小的 loading 提示，讓使用者知道我們還在確認最新狀態
+        document.getElementById('loading-spinner').style.display = 'flex'; 
+        document.getElementById('loading-spinner').querySelector('p').textContent = '更新最新狀態中...';
+    } else {
+        // 如果完全沒快取，還是要顯示大 Loading
+        document.getElementById('loading-spinner').style.display = 'flex';
+    }
 
-            try {
-                // 2. 背景更新資料
-                const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-                const data = await res.json();
-                
-                // 3. 更新快取
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                ALL_EVENTS = data.events || [];
+    try {
+        // ---------------------------------------------------------
+        // 2. 🐢 [背景更新] 雖然畫面出來了，但還是要去 Server 抓最新的
+        // ---------------------------------------------------------
+        const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+        const data = await res.json();
+        
+        // 3. 拿到新資料後，更新快取
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        ALL_EVENTS = data.events || [];
 
-                // 4. 再次渲染 (確保資料最新)
-                renderEvents(ALL_EVENTS);
+        // 4. 再次渲染 (覆蓋舊資料)
+        renderEvents(ALL_EVENTS);
 
-            } catch (err) {
-                console.error('更新失敗，維持顯示快取:', err);
-            } finally {
-                // 隱藏 Loading
-                document.getElementById('loading-spinner').style.display = 'none';
-            }
+    } catch (err) {
+        console.error('更新失敗，將維持顯示快取資料:', err);
+    } finally {
+        document.getElementById('loading-spinner').style.display = 'none';
+    }
+}
+
+// ---------------------------------------------------------
+// 🎨 [重構] 把渲染邏輯抽離出來，因為要呼叫兩次
+// ---------------------------------------------------------
+function renderEvents(events) {
+    ALL_EVENTS = events; // 更新全域變數
+    const activeContainer = document.getElementById('active-events-container');
+    const pastContainer = document.getElementById('past-events-container');
+    const pastWrapper = document.getElementById('past-events-wrapper');
+    
+    activeContainer.innerHTML = '';
+    pastContainer.innerHTML = '';
+    let hasPastEvents = false;
+
+    events.forEach(ev => {
+        // ... (這裡放原本建立 card 的所有代碼) ...
+        // ... 原本的 card.createElement ...
+        // ... 原本的 card.onclick ... 
+        
+        // 為了節省篇幅，請把原本 forEach 裡面的內容搬進來
+        const card = document.createElement('div');
+        const isClosed = (ev.Status === 'CLOSE');
+        
+        let cssClass = 'event-card';
+        if (isClosed) cssClass += ' past-event';
+        if (ev.IsRegistered) cssClass += ' selected'; 
+        
+        // 保留原本的邏輯
+        if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
+            if (!cssClass.includes('selected')) cssClass += ' selected';
         }
 
-        function renderEvents(events) {
-            ALL_EVENTS = events; 
-            const activeContainer = document.getElementById('active-events-container');
-            const pastContainer = document.getElementById('past-events-container');
-            const pastWrapper = document.getElementById('past-events-wrapper');
-            
-            // 清空容器 (此動作會移除骨架屏)
-            activeContainer.innerHTML = '';
-            pastContainer.innerHTML = '';
-            let hasPastEvents = false;
+        card.className = cssClass;
+        
+        let html = '';
+        if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
+        html += `<span class="event-title">${ev.Title}</span>`;
+        // 注意：這裡如果用快取，Time 已經是字串了，不是 Date 物件，可能需要微調 formatLocalTime
+        html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+        
+        card.innerHTML = html;
 
-            events.forEach(ev => {
-                const card = document.createElement('div');
-                const isClosed = (ev.Status === 'CLOSE');
-                
-                let cssClass = 'event-card';
-                if (isClosed) cssClass += ' past-event';
-                if (ev.IsRegistered) cssClass += ' selected'; 
-                
-                if (CURRENT_EVENT_ID && ev.EventID === CURRENT_EVENT_ID) {
-                    if (!cssClass.includes('selected')) cssClass += ' selected';
-                }
-
-                card.className = cssClass;
-                
-                let html = '';
-                if (ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
-                html += `<span class="event-title">${ev.Title}</span>`;
-                html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
-                
-                card.innerHTML = html;
-
-                card.onclick = function () {
-                     if (CURRENT_EVENT_ID === ev.EventID) {
-                        this.classList.remove('selected');
-                        document.getElementById('merged-content-card').style.display = 'none';
-                        CURRENT_EVENT_ID = null;
-                        return;
-                    }
-                    document.querySelectorAll('.event-card').forEach(el => {
-                        if(el.classList.contains('past-event')) {
-                            el.className = 'event-card past-event';
-                        } else {
-                            el.className = 'event-card';
-                        }
-                    });
-                    this.classList.add('selected');
-                    selectEvent(ev.EventID);
-                };
-
-                if (isClosed) {
-                    pastContainer.appendChild(card);
-                    hasPastEvents = true;
+        card.onclick = function () {
+             if (CURRENT_EVENT_ID === ev.EventID) {
+                this.classList.remove('selected');
+                document.getElementById('merged-content-card').style.display = 'none';
+                CURRENT_EVENT_ID = null;
+                return;
+            }
+            document.querySelectorAll('.event-card').forEach(el => {
+                if(el.classList.contains('past-event')) {
+                    el.className = 'event-card past-event';
                 } else {
-                    activeContainer.appendChild(card);
+                    el.className = 'event-card';
                 }
             });
+            this.classList.add('selected');
+            selectEvent(ev.EventID);
+        };
 
-            pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
-            document.getElementById('event-selection').style.display = 'block';
+        if (isClosed) {
+            pastContainer.appendChild(card);
+            hasPastEvents = true;
+        } else {
+            activeContainer.appendChild(card);
         }
+    });
 
+    pastWrapper.style.display = hasPastEvents ? 'block' : 'none';
+    // 注意：這裡不要隱藏 loading-spinner，交給 finally 區塊統一處理
+    document.getElementById('event-selection').style.display = 'block';
+}
         function selectEvent(eventId) {
             const ev = ALL_EVENTS.find(e => e.EventID === eventId);
             if (!ev) return;
@@ -896,7 +914,7 @@
 
         function copyDataToClipboard() {
             if (LAST_LOADED_USERS.length === 0) {
-                alert("目前無名單可匯出");
+                showToast("❌ 目前無名單可匯出");
                 return;
             }
 
@@ -954,9 +972,9 @@
                 try {
                     document.execCommand('copy');
                     if (navigator.vibrate) navigator.vibrate(50);
-                    alert("✅ 名單已複製！");
+                    showToast("名單已複製！");
                 } catch (err) {
-                    alert("❌ 複製失敗");
+                    showToast("❌ 複製失敗");
                 }
                 document.body.removeChild(textArea);
             };
@@ -965,7 +983,7 @@
                  if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(txt).then(() => {
                         if (navigator.vibrate) navigator.vibrate(50);
-                        alert("✅ 名單已複製！");
+                        showToast("名單已複製！");
                     }).catch(() => fallbackCopy(txt));
                 } else {
                     fallbackCopy(txt);
@@ -1084,6 +1102,9 @@
                 msg.textContent = data.message;
 
                 if (data.status === 'success') {
+                    // Show success/cancel toast
+                    showToast(action === 'cancel' ? "已取消報名" : "報名成功！");
+
                     await loadStatsList(CURRENT_EVENT_ID);
                     await loadEventsList();
                     
